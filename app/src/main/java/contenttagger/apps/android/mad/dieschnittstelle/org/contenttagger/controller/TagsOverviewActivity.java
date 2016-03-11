@@ -331,7 +331,6 @@ public class TagsOverviewActivity extends ActionBarActivity {
             if (prev != null) {
                 ft.remove(prev);
             }
-            ft.addToBackStack(null);
 
             // Create and show the dialog.
             DialogFragment dialog = ListItemMenuDialogFragment.newInstance(item, this);
