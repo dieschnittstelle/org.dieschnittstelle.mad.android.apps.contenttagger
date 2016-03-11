@@ -1,0 +1,24 @@
+Toolbar
+- Factoring-out toolbar into separate layout file
+- Toolbar needs to be set as actionbar in the layout (via setSupportActionBar)
+- Theme in styles.xml needs to declare that no default actionbar will be used
+
+Sidemenu
+- DrawerLayout necessary
+- Activity needs to use setDisplayHomeAsUpEnabled() and setHomeAsUpIndicator() on toolbar for opening it via a custom "main menu" icon
+
+RecyclerView
+- For using RecyclerView add dependency: compile 'com.android.support:recyclerview-v7:+'
+- Declare RecyclerAdapter Class extending RecyclerView.Adapter
+- RecyclerAdapter uses a list of items and provides the databinding for these items
+- Adapter needs to provide CRUD methods for updating the view
+- List item separator can be included in item layout
+- Interaction with item can be dealt with using a selector for background color and a simple OnTouchListener
+- Selection of items and constituents of items, e.g. item menu can be dealt with using OnClickListener
+
+
+Icons
+- use ImageButton
+- assign image using android:src in xml
+- assign global color in style.xml
+- See https://design.google.com/icons/ for material icons

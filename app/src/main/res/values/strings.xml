@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">ContentTagger</string>
     <string name="action_settings">Settings</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
     <string name="view_tags_overview">Tags</string>
+    <string name="action_add">Add</string>
 </resources>

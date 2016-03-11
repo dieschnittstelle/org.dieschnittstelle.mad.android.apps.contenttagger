@@ -1,11 +1,12 @@
 package contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Created by master on 10.03.16.
  */
-public class Tag extends Entity {
+public class Tag extends Entity implements Serializable {
 
     private String name;
 
@@ -31,4 +32,12 @@ public class Tag extends Entity {
         this.taggedItems = taggedItems;
     }
 
+
+    @Override
+    public String toString() {
+        return "Tag{" +
+                "name='" + name + '\'' +
+                ", taggedItems=" + taggedItems +
+                '}';
+    }
 }

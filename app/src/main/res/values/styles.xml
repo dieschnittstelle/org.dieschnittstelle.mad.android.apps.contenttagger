@@ -11,4 +11,6 @@
 
     </style>
 
+    <item name="itemmenu_heading_background" type="color">#1a1a1a</item>
+
 </resources>
