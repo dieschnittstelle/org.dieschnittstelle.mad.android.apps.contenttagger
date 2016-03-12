@@ -6,15 +6,6 @@ package contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.model;
 public abstract class Entity {
 
     private long id;
-    private String name;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public long getId() {
         return this.id;

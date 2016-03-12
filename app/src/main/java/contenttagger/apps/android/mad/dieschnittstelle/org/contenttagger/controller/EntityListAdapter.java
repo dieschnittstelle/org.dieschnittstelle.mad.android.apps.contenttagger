@@ -27,13 +27,13 @@ import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.model.E
 /**
  * Created by master on 12.03.16.
  */
-public /*abstract*/ class EntityListAdapter extends RecyclerView.Adapter<EntityListAdapter.EntityViewHolder> {
+public abstract class EntityListAdapter<E extends Entity,H extends EntityListAdapter.EntityViewHolder> extends RecyclerView.Adapter<EntityListAdapter.EntityViewHolder> {
 
     protected static String logger = "EntityListAdapter";
 
     private Activity controller;
 
-    private List<Entity> entities = new ArrayList<Entity>();
+    private List<E> entities = new ArrayList<E>();
     private int itemLayout;
     public int[] itemMenuActions;
     public int itemMenuLayout;
@@ -65,21 +65,30 @@ public /*abstract*/ class EntityListAdapter extends RecyclerView.Adapter<EntityL
     @Override
     public EntityViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(itemLayout, parent, false);
-        return new EntityViewHolder(v, this);
+        try {
+            EntityViewHolder vh = onCreateEntityViewHolder(v, this);
+            vh.setViewAndAdapter(v,this);
+            return vh;
+        }
+        catch (Exception e) {
+            String msg = "onCreateViewHolder(): got exception: " + e;
+            Log.e(logger,msg,e);
+            throw new RuntimeException(msg,e);
+        }
     }
 
     @Override
     public void onBindViewHolder(EntityViewHolder holder, int position) {
         // only show the divider if we have not reached the last list item
-        Entity entity = entities.get(position);
-        holder.name.setText(entity.getName());
+        E entity = entities.get(position);
         holder.itemView.setTag(entity);
         holder.itemMenu.setTag(entity);
+        onBindEntityViewHolder((H)holder,entity,position);
     }
 
-//    public EntityViewHolder onCreateEntityViewHolder(View itemLayout); {
-//
-//    }
+    public abstract H onCreateEntityViewHolder(View view,EntityListAdapter adapter);
+
+    public abstract void onBindEntityViewHolder(H holder,E entity,int position);
 
 
     @Override
@@ -91,20 +100,23 @@ public /*abstract*/ class EntityListAdapter extends RecyclerView.Adapter<EntityL
      * the view holder
      ************************************************************/
 
-    public static class EntityViewHolder extends RecyclerView.ViewHolder {
-        public TextView name;
+    public abstract static class EntityViewHolder extends RecyclerView.ViewHolder {
         public View itemMenu;
         public View divider;
 
         public EntityViewHolder(final View itemView, EntityListAdapter adapter) {
             super(itemView);
-            this.name = (TextView) itemView.findViewById(R.id.name);
+            // assume we have a divider
             this.divider = itemView.findViewById(R.id.divider);
             this.itemMenu = itemView.findViewById(R.id.listitem_menu);
+        }
 
-            // set listeners for visual (touch) and functional (click) feedback
+        public void setViewAndAdapter(View itemView,EntityListAdapter adapter) {
+            this.itemMenu = itemView.findViewById(R.id.listitem_menu);
             this.itemView.setOnTouchListener(adapter.onTouchItemListener);
-            this.itemMenu.setOnTouchListener(adapter.onTouchItemMenuListener);
+            if (this.itemMenu != null) {
+                this.itemMenu.setOnTouchListener(adapter.onTouchItemMenuListener);
+            }
         }
 
     }
@@ -113,40 +125,42 @@ public /*abstract*/ class EntityListAdapter extends RecyclerView.Adapter<EntityL
      * handling item / item menu / item menu action selection
      **********************************************************************/
 
-    public void onSelectListItem(Entity entity) {
+    public void onSelectListItem(E entity) {
         Log.i(logger, "onSelectListItem(): " + entity);
+        onSelectEntity(entity);
     }
 
-    public void onSelectListItemMenu(Entity entity) {
+    protected abstract void onSelectEntity(E entity);
+
+    public void onSelectListItemMenu(E entity) {
         Log.i(logger, "onSelectListItemMenu(): " + entity);
         showItemMenuDialog(entity);
     }
 
-    public void onSelectListItemMenuAction(int action, Entity entity) {
+    public void onSelectListItemMenuAction(int action, E entity) {
         Log.i(logger, "onSelectListItemMenuAction(): " + action + "@" + entity);
-        if (action == R.id.action_delete) {
-            removeItem(entity);
-        }
+        onSelectEntityMenuAction(action,entity);
         hideItemMenuDialog();
     }
 
+    protected abstract void onSelectEntityMenuAction(int action,E entity);
 
     /**********************************************************************
      * handling feedback from crud operations
      **********************************************************************/
 
-    public void addItem(Entity item) {
+    public void addItem(E item) {
         this.entities.add(item);
         this.notifyItemInserted(this.entities.size() - 1);
     }
 
-    public void addItems(List<? extends Entity> items) {
+    public void addItems(List<E> items) {
         int sizeBefore = this.entities.size();
         this.entities.addAll(items);
         this.notifyItemRangeInserted(sizeBefore, items.size());
     }
 
-    public void removeItem(Entity item) {
+    public void removeItem(E item) {
         int index = this.entities.indexOf(item);
         if (index > -1) {
             this.entities.remove(index);
@@ -272,7 +286,7 @@ public /*abstract*/ class EntityListAdapter extends RecyclerView.Adapter<EntityL
             }
 
             // Create and show the dialog.
-            DialogFragment dialog = ListItemMenuDialogFragment.newInstance(item, this);
+            DialogFragment dialog = newItemMenuDialogInstance(item, this);
             dialog.show(ft, "menuItemDialog");
         } else {
             if (this.itemMenuDialog == null) {
@@ -316,7 +330,7 @@ public /*abstract*/ class EntityListAdapter extends RecyclerView.Adapter<EntityL
         // Pass null as the parent view because its going in the dialog layout
         View dialogView = inflater.inflate(itemMenuLayout, null);
         // we create a view holder
-        dialogView.findViewById(R.id.dialogRoot).setTag(new ItemMenuDialogViewHolder(dialogView));
+        dialogView.findViewById(R.id.dialogRoot).setTag(new ItemMenuDialogViewHolder(dialogView, this));
 
         builder.setView(dialogView);
         // we set the view as an instance variable as findViewById() does not work on the dialog
@@ -326,27 +340,35 @@ public /*abstract*/ class EntityListAdapter extends RecyclerView.Adapter<EntityL
     }
 
     /*
+     * callback for binding an entity to an itemMenu
+     */
+    public abstract void onBindEntityMenuDialog(ItemMenuDialogViewHolder holder,E item);
+
+    /*
      * a EntityViewHolder for the itemmenu dialog that allows us to easily update the dialog for new items
      */
-    private class ItemMenuDialogViewHolder {
+    public static class ItemMenuDialogViewHolder {
 
-        public TextView heading;
+        public View heading;
         public List<View> actions = new ArrayList<View>();
+        public EntityListAdapter adapter;
 
-        public ItemMenuDialogViewHolder(View dialogView) {
-            this.heading = (TextView) dialogView.findViewById(R.id.heading);
-            for (int i = 0; i < itemMenuActions.length; i++) {
-                View currentAction = dialogView.findViewById(itemMenuActions[i]);
-                currentAction.setOnTouchListener(onTouchItemMenuActionListener);
+        public ItemMenuDialogViewHolder(View dialogView,EntityListAdapter adapter) {
+            this.adapter = adapter;
+            this.heading = (View) dialogView.findViewById(R.id.heading);
+            for (int i = 0; i < adapter.itemMenuActions.length; i++) {
+                View currentAction = dialogView.findViewById(adapter.itemMenuActions[i]);
+                currentAction.setOnTouchListener(adapter.onTouchItemMenuActionListener);
                 this.actions.add(currentAction);
             }
         }
 
         public void setItem(Entity item) {
-            this.heading.setText(item.getName());
             for (View view : this.actions) {
                 view.setTag(item);
             }
+
+            adapter.onBindEntityMenuDialog(this, item);
         }
     }
 
@@ -354,26 +376,27 @@ public /*abstract*/ class EntityListAdapter extends RecyclerView.Adapter<EntityL
  * a dialog for selecting actions for a list item, following http://developer.android.com/reference/android/app/DialogFragment.html
  * alternative solution using a dialogfragment
  */
-    public static class ListItemMenuDialogFragment extends DialogFragment {
-
-        private static String logger = "ListItemMenuDialogFragment";
-
-        private Entity item;
-
-        private EntityListAdapter adapter;
-
-        static ListItemMenuDialogFragment newInstance(Entity item, EntityListAdapter adapter) {
-            ListItemMenuDialogFragment instance = new ListItemMenuDialogFragment();
-            instance.setItem(item);
-            instance.setAdapter(adapter);
+    private ListItemMenuDialogFragment newItemMenuDialogInstance(Entity item, EntityListAdapter adapter) {
+        ListItemMenuDialogFragment instance = new ListItemMenuDialogFragment();
+        instance.setItem(item);
+        instance.setAdapter(adapter);
 
 //            // take over argument passing via bundle rather than setting the object directly...
 //            Bundle args = new Bundle();
 //            args.putSerializable("item", item);
 //            instance.setArguments(args);
 
-            return instance;
-        }
+        return instance;
+    }
+
+
+    public static class ListItemMenuDialogFragment extends DialogFragment {
+
+        private String logger = "ListItemMenuDialogFragment";
+
+        private Entity item;
+
+        private EntityListAdapter adapter;
 
         public void setItem(Entity item) {
             this.item = item;
@@ -395,10 +418,9 @@ public /*abstract*/ class EntityListAdapter extends RecyclerView.Adapter<EntityL
 
             getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
             ViewGroup dialogView = (ViewGroup) inflater.inflate(adapter.itemMenuLayout, container, false);
-            TextView heading = (TextView) dialogView.findViewById(R.id.heading);
+            View heading = (TextView) dialogView.findViewById(R.id.heading);
 
-
-            heading.setText(item.getName());
+            this.adapter.onBindEntityMenuDialog(new ItemMenuDialogViewHolder(dialogView, adapter),item);
 
             // we iterate over the actions and set a listener
             for (int i = 0; i < adapter.itemMenuActions.length; i++) {

@@ -72,7 +72,36 @@ public class TagsOverviewActivity extends ActionBarActivity {
 
 
         // create an adapter for the recycler view
-        this.adapter = new EntityListAdapter(this, (RecyclerView) findViewById(R.id.taglist), R.layout.tags_overview_itemview, R.layout.itemmenu_tags_overview, new int[]{R.id.action_delete, R.id.action_edit});
+        this.adapter = new EntityListAdapter<Tag,TagViewHolder>(this, (RecyclerView) findViewById(R.id.taglist), R.layout.tags_overview_itemview, R.layout.itemmenu_tags_overview, new int[]{R.id.action_delete, R.id.action_edit}) {
+
+            @Override
+            public TagViewHolder onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
+                return new TagViewHolder(view,adapter);
+            }
+
+            @Override
+            public void onBindEntityViewHolder(TagViewHolder holder, Tag entity, int position) {
+                holder.name.setText(entity.getName());
+            }
+
+            @Override
+            protected void onSelectEntity(Tag entity) {
+                Log.i(logger, "onSelectEntity(): " + entity);
+            }
+
+            @Override
+            protected void onSelectEntityMenuAction(int action, Tag entity) {
+                Log.i(logger, "onSelectEntityMenuAction(): " + action + "@" + entity);
+                if (action == R.id.action_delete) {
+                    this.removeItem(entity);
+                }
+            }
+
+            @Override
+            public void onBindEntityMenuDialog(EntityListAdapter.ItemMenuDialogViewHolder holder, Tag item) {
+                ((TextView)holder.heading).setText(item.getName());
+            }
+        };
 
         new AsyncTask<Void, Void, List<Tag>>() {
 
@@ -87,6 +116,17 @@ public class TagsOverviewActivity extends ActionBarActivity {
             }
 
         }.execute();
+
+    }
+
+    private class TagViewHolder extends EntityListAdapter.EntityViewHolder {
+
+        public TextView name;
+
+        public TagViewHolder(final View itemView, EntityListAdapter adapter) {
+            super(itemView,adapter);
+            name = (TextView)itemView.findViewById(R.id.name);
+        }
 
     }
 

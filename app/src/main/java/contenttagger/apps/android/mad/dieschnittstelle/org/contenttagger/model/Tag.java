@@ -10,8 +10,18 @@ public class Tag extends Entity implements Serializable {
 
     private List<Taggable> taggedItems;
 
+    private String name;
+
     public Tag(String name) {
-        super.setName(name);
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.setName(name);
     }
 
     public List<Taggable> getTaggedItems() {
