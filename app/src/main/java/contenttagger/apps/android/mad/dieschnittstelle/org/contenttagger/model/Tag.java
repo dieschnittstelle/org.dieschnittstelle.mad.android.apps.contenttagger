@@ -8,20 +8,10 @@ import java.util.List;
  */
 public class Tag extends Entity implements Serializable {
 
-    private String name;
-
     private List<Taggable> taggedItems;
 
     public Tag(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+        super.setName(name);
     }
 
     public List<Taggable> getTaggedItems() {
@@ -36,7 +26,8 @@ public class Tag extends Entity implements Serializable {
     @Override
     public String toString() {
         return "Tag{" +
-                "name='" + name + '\'' +
+                "id='" + getId() + '\'' +
+                "name='" + getName() + '\'' +
                 ", taggedItems=" + taggedItems +
                 '}';
     }
