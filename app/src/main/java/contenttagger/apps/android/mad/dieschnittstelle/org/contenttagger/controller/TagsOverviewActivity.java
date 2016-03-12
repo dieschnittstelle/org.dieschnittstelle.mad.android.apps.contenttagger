@@ -321,7 +321,11 @@ public class TagsOverviewActivity extends ActionBarActivity {
             }
         }
 
-        private boolean dialogAsFragment = true;
+        /*
+         *
+         */
+
+        private boolean dialogAsFragment = false;
 
         private Dialog itemMenuDialog;
         private View itemMenuDialogView;
@@ -421,6 +425,7 @@ public class TagsOverviewActivity extends ActionBarActivity {
 
     /*
      * a dialog for selecting actions for a list item, following http://developer.android.com/reference/android/app/DialogFragment.html
+     * alternative solution using a dialogfragment
      */
     public static class ListItemMenuDialogFragment extends DialogFragment {
 
