@@ -1,78 +1,51 @@
 package contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.controller;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
-
-import android.support.v7.widget.Toolbar;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.R;
-import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.model.Entity;
 import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.model.Tag;
 
-public class TagsOverviewActivity extends ActionBarActivity {
-
-    protected static String logger = "TagsOverviewActvity";
+/**
+ * Created by master on 12.03.16.
+ */
+public class TagsOverviewFragment extends Fragment {
 
     /*
      * the adapter for the listview
      */
-    private EntityListAdapter adapter;
+    private EntityListAdapter<Tag,TagViewHolder> adapter;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tags_overview);
 
-        // read out the toolbar from the layout and set it as actionbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_overview);
-        setSupportActionBar(toolbar);
-        // the following statements allow to open the drawer menu on pressing the "home" icon and set a custom home icon
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_drawer);
-        // this allows to react to opening/closing the drawer - not really necessary
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), toolbar, 0, 0) {
+        // declare that we use an options menu
+        setHasOptionsMenu(true);
+    }
 
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-                Log.i(logger, "onDrawerOpened()");
-            }
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        super.onCreateView(inflater, container, savedInstanceState);
 
-            public void onDrawerClosed(View drawerView) {
-                super.onDrawerClosed(drawerView);
-                Log.i(logger, "onDrawerClosed()");
-            }
-        };
-
-        ((DrawerLayout) findViewById(R.id.drawer_layout)).setDrawerListener(toggle);
-
+        // the view
+        View contentView = inflater.inflate(R.layout.tags_overview_contentview, null);
 
         // create an adapter for the recycler view
-        this.adapter = new EntityListAdapter<Tag,TagViewHolder>(this, (RecyclerView) findViewById(R.id.taglist), R.layout.tags_overview_itemview, R.layout.itemmenu_tags_overview, new int[]{R.id.action_delete, R.id.action_edit}) {
+        this.adapter = new EntityListAdapter<Tag,TagViewHolder>(this.getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.tags_overview_itemview, R.layout.tags_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit}) {
 
             @Override
             public TagViewHolder onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
@@ -102,6 +75,14 @@ public class TagsOverviewActivity extends ActionBarActivity {
                 ((TextView)holder.heading).setText(item.getName());
             }
         };
+
+        return contentView;
+    }
+
+    // we start populating the view onresumt
+    @Override
+    public void onResume() {
+        super.onResume();
 
         new AsyncTask<Void, Void, List<Tag>>() {
 
@@ -143,10 +124,9 @@ public class TagsOverviewActivity extends ActionBarActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_tags_overview, menu);
-        return true;
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_tags_overview, menu);
     }
 
     @Override
@@ -161,5 +141,7 @@ public class TagsOverviewActivity extends ActionBarActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+
 
 }

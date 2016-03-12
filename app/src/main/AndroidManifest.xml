@@ -9,7 +9,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".controller.TagsOverviewActivity"
+            android:name=".controller.MainActivity"
             android:label="@string/view_tags_overview">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
