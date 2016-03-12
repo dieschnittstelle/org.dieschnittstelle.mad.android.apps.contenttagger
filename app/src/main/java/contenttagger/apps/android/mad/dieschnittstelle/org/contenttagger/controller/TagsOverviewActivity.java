@@ -1,10 +1,11 @@
 package contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.controller;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.app.LauncherActivity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
@@ -14,7 +15,6 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,15 +24,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.R;
-import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.model.Entity;
 import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.model.Tag;
 
 public class TagsOverviewActivity extends ActionBarActivity {
@@ -281,12 +278,12 @@ public class TagsOverviewActivity extends ActionBarActivity {
         }
 
         public void onSelectListItem(Tag tag) {
-            Log.i(logger,"onSelectListItem(): " + tag);
+            Log.i(logger, "onSelectListItem(): " + tag);
         }
 
         public void onSelectListItemMenu(Tag tag) {
             Log.i(logger,"onSelectListItemMenu(): " + tag);
-            showMenuItemDialog(tag);
+            showItemMenuDialog(tag);
         }
 
         public void onSelectListItemMenuAction(int action,Tag tag) {
@@ -294,7 +291,7 @@ public class TagsOverviewActivity extends ActionBarActivity {
             if (action == R.id.action_delete) {
                 removeItem(tag);
             }
-            hideMenuItemDialog();
+            hideItemMenuDialog();
         }
 
 
@@ -324,29 +321,103 @@ public class TagsOverviewActivity extends ActionBarActivity {
             }
         }
 
-        private void showMenuItemDialog(Tag item) {
-            // in contrast to the example we should not need to consider the case that there is already an existing instance of the dialog...
-            FragmentTransaction ft = controller.getFragmentManager().beginTransaction();
-            Fragment prev = controller.getFragmentManager().findFragmentByTag("menuItemDialog");
-            if (prev != null) {
-                ft.remove(prev);
-            }
+        private boolean dialogAsFragment = true;
 
-            // Create and show the dialog.
-            DialogFragment dialog = ListItemMenuDialogFragment.newInstance(item, this);
-            dialog.show(ft, "menuItemDialog");
+        private Dialog itemMenuDialog;
+        private View itemMenuDialogView;
+
+        private void showItemMenuDialog(Tag item) {
+            if (this.dialogAsFragment) {
+                // in contrast to the example we should not need to consider the case that there is already an existing instance of the dialog...
+                FragmentTransaction ft = controller.getFragmentManager().beginTransaction();
+                Fragment prev = controller.getFragmentManager().findFragmentByTag("menuItemDialog");
+                if (prev != null) {
+                    ft.remove(prev);
+                }
+
+                // Create and show the dialog.
+                DialogFragment dialog = ListItemMenuDialogFragment.newInstance(item, this);
+                dialog.show(ft, "menuItemDialog");
+            }
+            else {
+                if (this.itemMenuDialog == null) {
+                    this.itemMenuDialog = createItemMenuDialog();
+                }
+                if (this.itemMenuDialog.isShowing()) {
+                    this.itemMenuDialog.hide();
+                }
+                ((ItemMenuDialogViewHolder)this.itemMenuDialogView.findViewById(R.id.dialogRoot).getTag()).setItem(item);
+
+                this.itemMenuDialog.show();
+            }
         }
 
-        private void hideMenuItemDialog() {
-            FragmentTransaction ft = controller.getFragmentManager().beginTransaction();
-            Fragment prev = controller.getFragmentManager().findFragmentByTag("menuItemDialog");
-            if (prev != null) {
-                ft.remove(prev);
+        private void hideItemMenuDialog() {
+            if (this.dialogAsFragment) {
+                FragmentTransaction ft = controller.getFragmentManager().beginTransaction();
+                Fragment prev = controller.getFragmentManager().findFragmentByTag("menuItemDialog");
+                if (prev != null) {
+                    ft.remove(prev);
+                }
+                ft.commit();
             }
-            ft.commit();
+            else {
+                if (this.itemMenuDialog.isShowing()) {
+                    this.itemMenuDialog.hide();
+                }
+            }
+        }
+
+        /*
+         * alternative for creating a dialog as a singleton
+         */
+        public Dialog createItemMenuDialog() {
+            Log.i(logger,"createMenuItemDialog()");
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(controller);
+            // Get the layout inflater
+            LayoutInflater inflater = controller.getLayoutInflater();
+
+            // Inflate and set the layout for the dialog
+            // Pass null as the parent view because its going in the dialog layout
+            View dialogView = inflater.inflate(R.layout.itemmenu_tags_overview, null);
+            // we create a view holder
+            dialogView.findViewById(R.id.dialogRoot).setTag(new ItemMenuDialogViewHolder(dialogView));
+
+            builder.setView(dialogView);
+            // we set the view as an instance variable as findViewById() does not work on the dialog
+            this.itemMenuDialogView = dialogView;
+
+            return builder.create();
+        }
+
+        /*
+         * a ViewHolder for the itemmenu dialog that allows us to easily update the dialog for new items
+         */
+        private class ItemMenuDialogViewHolder {
+
+            public TextView heading;
+            public List<View> actions = new ArrayList<View>();
+
+            public ItemMenuDialogViewHolder(View dialogView) {
+                this.heading = (TextView)dialogView.findViewById(R.id.heading);
+                for (int i=0;i<itemMenuActions.length;i++) {
+                    View currentAction = dialogView.findViewById(itemMenuActions[i]);
+                    currentAction.setOnTouchListener(onTouchItemMenuActionListener);
+                    this.actions.add(currentAction);
+                }
+            }
+
+            public void setItem(Tag item) {
+                this.heading.setText(item.getName());
+                for (View view : this.actions) {
+                    view.setTag(item);
+                }
+            }
         }
 
     }
+
 
     /*
      * a dialog for selecting actions for a list item, following http://developer.android.com/reference/android/app/DialogFragment.html
@@ -392,7 +463,9 @@ public class TagsOverviewActivity extends ActionBarActivity {
 
             getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
             ViewGroup dialogView = (ViewGroup)inflater.inflate(adapter.itemMenuLayout, container, false);
-                TextView heading = (TextView)dialogView.findViewById(R.id.heading);
+            TextView heading = (TextView)dialogView.findViewById(R.id.heading);
+
+
             heading.setText(item.getName());
 
             // we iterate over the actions and set a listener
@@ -406,5 +479,6 @@ public class TagsOverviewActivity extends ActionBarActivity {
         }
 
     }
+
 
 }
