@@ -1,4 +1,4 @@
-package contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.controller;
+package org.dieschnittstelle.mobile.android.components.controller;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -21,11 +21,11 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.R;
-import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.model.Entity;
+import org.dieschnittstelle.mobile.android.components.model.Entity;
 
 /**
  * Created by master on 12.03.16.
+ * also here we have removed any dependencies to application specific classes
  */
 public abstract class EntityListAdapter<E extends Entity,H extends EntityListAdapter.EntityViewHolder> extends RecyclerView.Adapter<EntityListAdapter.EntityViewHolder> {
 
@@ -47,6 +47,10 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
         this.controller = controller;
         this.itemMenuLayout = itemMenuLayout;
         this.itemMenuActions = itemMenuMenuActions;
+    }
+
+    public Activity getController() {
+        return this.controller;
     }
 
     /*
@@ -107,12 +111,12 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
         public EntityViewHolder(final View itemView, EntityListAdapter adapter) {
             super(itemView);
             // assume we have a divider
-            this.divider = itemView.findViewById(R.id.divider);
-            this.itemMenu = itemView.findViewById(R.id.listitem_menu);
+            this.divider = itemView.findViewById(adapter.getController().getResources().getIdentifier("divider","id",adapter.getController().getApplicationContext().getPackageName())/*R.id.divider*/);
+            this.itemMenu = itemView.findViewById(adapter.itemMenuLayout);
         }
 
         public void setViewAndAdapter(View itemView,EntityListAdapter adapter) {
-            this.itemMenu = itemView.findViewById(R.id.listitem_menu);
+            this.itemMenu = itemView.findViewById(adapter.getController().getResources().getIdentifier("listitem_menu","id",adapter.getController().getApplicationContext().getPackageName())/*R.id.listitem_menu*/);
             this.itemView.setOnTouchListener(adapter.onTouchItemListener);
             if (this.itemMenu != null) {
                 this.itemMenu.setOnTouchListener(adapter.onTouchItemMenuListener);
@@ -295,7 +299,7 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
             if (this.itemMenuDialog.isShowing()) {
                 this.itemMenuDialog.hide();
             }
-            ((ItemMenuDialogViewHolder) this.itemMenuDialogView.findViewById(R.id.dialogRoot).getTag()).setItem(item);
+            ((ItemMenuDialogViewHolder) this.itemMenuDialogView.findViewById(controller.getResources().getIdentifier("dialogRoot","id", getController().getApplicationContext().getPackageName()) /*R.id.dialogRoot*/).getTag()).setItem(item);
 
             this.itemMenuDialog.show();
         }
@@ -330,7 +334,7 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
         // Pass null as the parent view because its going in the dialog layout
         View dialogView = inflater.inflate(itemMenuLayout, null);
         // we create a view holder
-        dialogView.findViewById(R.id.dialogRoot).setTag(new ItemMenuDialogViewHolder(dialogView, this));
+        dialogView.findViewById(getController().getResources().getIdentifier("dialogRoot","id", getController().getApplicationContext().getPackageName())/*R.id.dialogRoot*/).setTag(new ItemMenuDialogViewHolder(dialogView, this));
 
         builder.setView(dialogView);
         // we set the view as an instance variable as findViewById() does not work on the dialog
@@ -355,7 +359,7 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
 
         public ItemMenuDialogViewHolder(View dialogView,EntityListAdapter adapter) {
             this.adapter = adapter;
-            this.heading = (View) dialogView.findViewById(R.id.heading);
+            this.heading = (View) dialogView.findViewById(adapter.getController().getResources().getIdentifier("heading","id",adapter.getController().getApplicationContext().getPackageName())/*R.id.heading*/);
             for (int i = 0; i < adapter.itemMenuActions.length; i++) {
                 View currentAction = dialogView.findViewById(adapter.itemMenuActions[i]);
                 currentAction.setOnTouchListener(adapter.onTouchItemMenuActionListener);
@@ -418,7 +422,7 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
 
             getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
             ViewGroup dialogView = (ViewGroup) inflater.inflate(adapter.itemMenuLayout, container, false);
-            View heading = (TextView) dialogView.findViewById(R.id.heading);
+            View heading = (TextView) dialogView.findViewById(adapter.getController().getResources().getIdentifier("heading","id",adapter.getController().getApplicationContext().getPackageName())/*R.id.heading*/);
 
             this.adapter.onBindEntityMenuDialog(new ItemMenuDialogViewHolder(dialogView, adapter),item);
 

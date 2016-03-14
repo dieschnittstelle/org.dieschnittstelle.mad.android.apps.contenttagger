@@ -1,4 +1,4 @@
-package contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.controller;
+package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
 import android.app.Fragment;
 import android.os.AsyncTask;
@@ -16,8 +16,9 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.R;
-import contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.model.Tag;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
+import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
 
 /**
  * Created by master on 12.03.16.
@@ -54,7 +55,7 @@ public class TagsOverviewFragment extends Fragment {
 
             @Override
             public void onBindEntityViewHolder(TagViewHolder holder, Tag entity, int position) {
-                holder.name.setText(entity.getName());
+                holder.name.setText(entity.getName() + "-" + entity.getId());
             }
 
             @Override
@@ -66,7 +67,7 @@ public class TagsOverviewFragment extends Fragment {
             protected void onSelectEntityMenuAction(int action, Tag entity) {
                 Log.i(logger, "onSelectEntityMenuAction(): " + action + "@" + entity);
                 if (action == R.id.action_delete) {
-                    this.removeItem(entity);
+                    deleteTag(entity);
                 }
             }
 
@@ -83,21 +84,7 @@ public class TagsOverviewFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
-        new AsyncTask<Void, Void, List<Tag>>() {
-
-            @Override
-            protected List<Tag> doInBackground(Void... params) {
-                return readAllTags();
-            }
-
-            @Override
-            protected void onPostExecute(List<Tag> tags) {
-                adapter.addItems(tags);
-            }
-
-        }.execute();
-
+        readAllTags();
     }
 
     private class TagViewHolder extends EntityListAdapter.EntityViewHolder {
@@ -112,15 +99,58 @@ public class TagsOverviewFragment extends Fragment {
     }
 
     /*
-     * read all tags
+     * usage of crud operations
      */
-    public List<Tag> readAllTags() {
-        List<Tag> tags = new ArrayList();
-        tags.add(new Tag("t1"));
-        tags.add(new Tag("t2"));
-        tags.add(new Tag("t3"));
+    public void readAllTags() {
 
-        return tags;
+        new AsyncTask<Void, Void, List<Tag>>() {
+
+            @Override
+            protected List<Tag> doInBackground(Void... params) {
+                return (List<Tag>)Tag.readAll(Tag.class);
+            }
+
+            @Override
+            protected void onPostExecute(List<Tag> tags) {
+                adapter.addItems(tags);
+            }
+
+        }.execute();
+
+    }
+
+    public void createTag(Tag tag) {
+        new AsyncTask<Tag, Void, Tag>() {
+
+            @Override
+            protected Tag doInBackground(Tag... params) {
+                params[0].create();
+                return params[0];
+            }
+
+            @Override
+            protected void onPostExecute(Tag tag) {
+                adapter.addItem(tag);
+            }
+
+        }.execute(tag);
+    }
+
+    public void deleteTag(Tag tag) {
+        new AsyncTask<Tag,Void,Tag>() {
+
+            @Override
+            protected Tag doInBackground(Tag... params) {
+                params[0].delete();
+                return params[0];
+            }
+
+            @Override
+            protected void onPostExecute(Tag tag) {
+                adapter.removeItem(tag);
+            }
+
+        }.execute(tag);
     }
 
     @Override
@@ -136,7 +166,7 @@ public class TagsOverviewFragment extends Fragment {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_add) {
-            adapter.addItem(new Tag("New"));
+            createTag(new Tag("new"));
         }
 
         return super.onOptionsItemSelected(item);

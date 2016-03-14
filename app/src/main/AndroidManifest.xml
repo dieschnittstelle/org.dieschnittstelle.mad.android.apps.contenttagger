@@ -1,15 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger">
+    package="org.dieschnittstelle.mobile.android.apps.contenttagger">
+
+    <!-- osmdroid (and other) permissions -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:name="org.dieschnittstelle.mobile.android.apps.contenttagger.ContentTaggerApplication">
+
+        <!-- this is configuration information for sugar crm -->
+        <meta-data android:name="DATABASE" android:value="contenttagger.db" />
+        <meta-data android:name="VERSION" android:value="2" />
+        <meta-data android:name="QUERY_LOG" android:value="true" />
+        <meta-data android:name="DOMAIN_PACKAGE_NAME" android:value="org.dieschnittstelle.mobile.android.apps.contenttagger.model" />
+
         <activity
-            android:name=".controller.MainActivity"
+            android:name="org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity"
             android:label="@string/view_tags_overview">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

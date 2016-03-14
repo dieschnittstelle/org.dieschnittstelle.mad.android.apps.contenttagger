@@ -21,4 +21,11 @@ Icons
 - use ImageButton
 - assign image using android:src in xml
 - assign global color in style.xml
-- See https://design.google.com/icons/ for material icons
+- See https://design.google.com/icons/ for material icons (includes search functionality)
+
+Maps
+- following https://github.com/osmdroid/osmdroid/wiki/How-to-use-the-osmdroid-library
+
+Sugar ORM
+- see http://satyan.github.io/sugar/getting-started.html
+- @Table annotation: http://stackoverflow.hex1.ru/questions/35610755/how-to-use-satyans-sugar-orm-with-table-annotation

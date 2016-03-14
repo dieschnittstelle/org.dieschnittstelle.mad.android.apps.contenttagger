@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:textColor="@color/abc_primary_text_material_dark">
-
-</TextView>
+    android:orientation="horizontal"
+    android:padding="15dp">
+    <ImageView
+        android:id="@+id/itemicon"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"/>
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/itemname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/abc_text_size_large_material"
+        android:paddingLeft="15dp"
+        android:textColor="@color/abc_primary_text_material_dark">
+    </TextView>
+</LinearLayout>

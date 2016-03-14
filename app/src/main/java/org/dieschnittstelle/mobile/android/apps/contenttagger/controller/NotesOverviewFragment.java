@@ -1,4 +1,4 @@
-package contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.controller;
+package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
 import android.app.Fragment;
 

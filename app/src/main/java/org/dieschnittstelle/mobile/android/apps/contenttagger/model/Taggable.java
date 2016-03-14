@@ -1,4 +1,4 @@
-package contenttagger.apps.android.mad.dieschnittstelle.org.contenttagger.model;
+package org.dieschnittstelle.mobile.android.apps.contenttagger.model;
 
 import java.util.List;
 
