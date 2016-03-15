@@ -42,8 +42,8 @@ public class TagsOverviewFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
 
-        // the view
-        View contentView = inflater.inflate(R.layout.tags_overview_contentview, null);
+        // the view - note that in order to obtain match_parent height, it needs to be instantiated as follows, see http://stackoverflow.com/questions/24503760/cardview-layout-width-match-parent-does-not-match-parent-recyclerview-width
+        View contentView = inflater.inflate(R.layout.tags_overview_contentview, container, false);
 
         // create an adapter for the recycler view
         this.adapter = new EntityListAdapter<Tag,TagViewHolder>(this.getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.tags_overview_itemview, R.layout.tags_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit}) {
@@ -84,6 +84,14 @@ public class TagsOverviewFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
+//        List<Tag> tags = new ArrayList<Tag>();
+//        tags.add(new Tag("t1"));
+//        tags.add(new Tag("t2"));
+//        tags.add(new Tag("t3"));
+
+//        adapter.addItems(tags);
+
         readAllTags();
     }
 

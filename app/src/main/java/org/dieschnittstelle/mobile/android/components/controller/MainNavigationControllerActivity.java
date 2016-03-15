@@ -172,6 +172,6 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-
+        this.drawerToggle.onConfigurationChanged(newConfig);
     }
 }

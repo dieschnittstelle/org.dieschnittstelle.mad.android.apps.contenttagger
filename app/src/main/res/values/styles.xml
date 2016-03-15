@@ -12,5 +12,7 @@
     </style>
 
     <item name="itemmenu_heading_background" type="color">#1a1a1a</item>
+    <item name="background_contrast_analysis1" type="color">#32cd32</item>
+    <item name="background_contrast_analysis2" type="color">#ff00ff</item>
 
 </resources>

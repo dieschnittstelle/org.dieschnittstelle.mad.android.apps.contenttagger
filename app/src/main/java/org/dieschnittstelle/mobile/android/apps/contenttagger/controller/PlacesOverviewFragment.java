@@ -25,7 +25,7 @@ public class PlacesOverviewFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
 
-        View view = inflater.inflate(R.layout.places_overview,null);
+        View view = inflater.inflate(R.layout.places_overview,container,false);
 
         this.map = (MapView) view.findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
