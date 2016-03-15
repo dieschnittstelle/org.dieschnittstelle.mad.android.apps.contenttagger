@@ -13,4 +13,6 @@ public interface Taggable {
 
     public void removeTag(Tag tag);
 
+    public String getTitle();
+
 }

@@ -43,7 +43,7 @@ public class Tag extends Entity implements Serializable {
     }
 
     public void setName(String name) {
-        this.setName(name);
+        this.name = name;
     }
 
     public List<Taggable> getTaggedItems() {

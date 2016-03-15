@@ -1,6 +1,9 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
+import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.DialogInterface;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
@@ -18,17 +21,36 @@ import java.util.List;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
+import org.dieschnittstelle.mobile.android.components.controller.CustomDialogController;
 import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
+import org.dieschnittstelle.mobile.android.components.events.Event;
+import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
+import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
+import org.dieschnittstelle.mobile.android.components.events.EventListener;
+import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
+import org.dieschnittstelle.mobile.android.components.view.ListItemViewHolderTitleSubtitle;
 
 /**
  * Created by master on 12.03.16.
  */
-public class TagsOverviewFragment extends Fragment {
+public class TagsOverviewFragment extends Fragment implements EventGenerator {
+
+    protected static String logger = "TagsOverviewFragment";
+
+    /*
+     * the event dispatcher
+     */
+    private static EventDispatcher eventDispatcher = EventDispatcher.getInstance();
 
     /*
      * the adapter for the listview
      */
-    private EntityListAdapter<Tag,TagViewHolder> adapter;
+    private EntityListAdapter<Tag,ListItemViewHolderTitleSubtitle> adapter;
+
+    /*
+     * the dialog for creating/editing tags
+     */
+    private CustomDialogController<Tag> editTagDialogController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,16 +68,16 @@ public class TagsOverviewFragment extends Fragment {
         View contentView = inflater.inflate(R.layout.tags_overview_contentview, container, false);
 
         // create an adapter for the recycler view
-        this.adapter = new EntityListAdapter<Tag,TagViewHolder>(this.getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.tags_overview_itemview, R.layout.tags_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit}) {
+        this.adapter = new EntityListAdapter<Tag,ListItemViewHolderTitleSubtitle>(this.getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.tags_overview_itemview, R.layout.tags_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit}) {
 
             @Override
-            public TagViewHolder onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
-                return new TagViewHolder(view,adapter);
+            public ListItemViewHolderTitleSubtitle onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
+                return new ListItemViewHolderTitleSubtitle(view,adapter);
             }
 
             @Override
-            public void onBindEntityViewHolder(TagViewHolder holder, Tag entity, int position) {
-                holder.name.setText(entity.getName() + "-" + entity.getId());
+            public void onBindEntityViewHolder(ListItemViewHolderTitleSubtitle holder, Tag entity, int position) {
+                holder.title.setText(entity.getName() + "-" + entity.getId());
             }
 
             @Override
@@ -67,7 +89,10 @@ public class TagsOverviewFragment extends Fragment {
             protected void onSelectEntityMenuAction(int action, Tag entity) {
                 Log.i(logger, "onSelectEntityMenuAction(): " + action + "@" + entity);
                 if (action == R.id.action_delete) {
-                    deleteTag(entity);
+                    entity.delete();
+                }
+                else if (action == R.id.action_edit) {
+                    editTagDialogController.show(entity);
                 }
             }
 
@@ -77,6 +102,38 @@ public class TagsOverviewFragment extends Fragment {
             }
         };
 
+        /*
+         * declare the listeners for the crud events!
+         */
+        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.CREATED, Tag.class), new EventListener<Tag>() {
+            @Override
+            public void onEvent(Event<Tag> event) {
+                adapter.addItem(event.getData());
+            }
+        });
+        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.UPDATED, Tag.class), new EventListener<Tag>() {
+            @Override
+            public void onEvent(Event<Tag> event) {
+                adapter.updateItem(event.getData());
+            }
+        });
+        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.DELETED, Tag.class), new EventListener<Tag>() {
+            @Override
+            public void onEvent(Event<Tag> event) {
+                adapter.removeItem(event.getData());
+            }
+        });
+        // we only react to reading out all tags if we have generated the event ourselves
+        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.READALL, Tag.class, this), new EventListener<List<Tag>>() {
+            @Override
+            public void onEvent(Event<List<Tag>> event) {
+                adapter.addItems(event.getData());
+            }
+        });
+
+        // we initialise the dialog
+        createEditTagDialogController();
+
         return contentView;
     }
 
@@ -85,80 +142,43 @@ public class TagsOverviewFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-//        List<Tag> tags = new ArrayList<Tag>();
-//        tags.add(new Tag("t1"));
-//        tags.add(new Tag("t2"));
-//        tags.add(new Tag("t3"));
-
-//        adapter.addItems(tags);
-
-        readAllTags();
+        Tag.readAll(Tag.class, this);
     }
 
-    private class TagViewHolder extends EntityListAdapter.EntityViewHolder {
-
-        public TextView name;
-
-        public TagViewHolder(final View itemView, EntityListAdapter adapter) {
-            super(itemView,adapter);
-            name = (TextView)itemView.findViewById(R.id.name);
-        }
-
-    }
-
-    /*
-     * usage of crud operations
-     */
-    public void readAllTags() {
-
-        new AsyncTask<Void, Void, List<Tag>>() {
-
+    public void createEditTagDialogController() {
+        this.editTagDialogController = new CustomDialogController<Tag>(this.getActivity(),R.layout.dialog_inputtext) {
             @Override
-            protected List<Tag> doInBackground(Void... params) {
-                return (List<Tag>)Tag.readAll(Tag.class);
+            protected void onBindViewHolder(boolean bound) {
+                // the listener for create/edit only needs to be set once
+                this.title.setText(data.created() ? R.string.title_edit_tag : R.string.title_create_tag);
+                if (this.data.created()) {
+                    this.input.setText(this.data.getName());
+                }
+                else {
+                    this.input.setText("");
+                }
+                this.primaryButton.setText(data.created() ? R.string.action_update : R.string.action_create);
+                this.secondaryButton.setText(R.string.action_cancel);
+                if (!bound) {
+
+                    this.primaryButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // we set the value of the input field on the tag (we ignore empty values here)
+                            data.setName(input.getText().toString());
+                            if (data.created()) {
+                                data.update();
+                            }
+                            else {
+                                data.create();
+                            }
+                            // we close the dialog
+                            hide();
+                        }
+                    });
+                }
             }
-
-            @Override
-            protected void onPostExecute(List<Tag> tags) {
-                adapter.addItems(tags);
-            }
-
-        }.execute();
-
-    }
-
-    public void createTag(Tag tag) {
-        new AsyncTask<Tag, Void, Tag>() {
-
-            @Override
-            protected Tag doInBackground(Tag... params) {
-                params[0].create();
-                return params[0];
-            }
-
-            @Override
-            protected void onPostExecute(Tag tag) {
-                adapter.addItem(tag);
-            }
-
-        }.execute(tag);
-    }
-
-    public void deleteTag(Tag tag) {
-        new AsyncTask<Tag,Void,Tag>() {
-
-            @Override
-            protected Tag doInBackground(Tag... params) {
-                params[0].delete();
-                return params[0];
-            }
-
-            @Override
-            protected void onPostExecute(Tag tag) {
-                adapter.removeItem(tag);
-            }
-
-        }.execute(tag);
+        };
     }
 
     @Override
@@ -174,7 +194,7 @@ public class TagsOverviewFragment extends Fragment {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_add) {
-            createTag(new Tag("new"));
+            this.editTagDialogController.show(new Tag());
         }
 
         return super.onOptionsItemSelected(item);

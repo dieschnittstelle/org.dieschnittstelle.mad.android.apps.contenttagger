@@ -1,0 +1,54 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_height="wrap_content"
+    android:layout_width="wrap_content"
+    android:id="@+id/dialogRoot"
+    android:theme="@style/AppTheme"
+    android:background="@color/primary_material_dark">
+    <TextView
+        android:padding="10dp"
+        android:textSize="@dimen/abc_text_size_medium_material"
+        android:id="@+id/heading"
+        android:textColor="@color/abc_primary_text_material_dark"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/itemmenu_heading_background"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/button_material_dark" />
+    <TextView
+        android:padding="10dp"
+        android:textSize="@dimen/abc_text_size_medium_material"
+        android:textColor="@color/abc_primary_text_material_dark"
+        android:id="@+id/action_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/action_edit"
+        android:background="@drawable/inputselector"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/button_material_dark" />
+    <TextView
+        android:padding="10dp"
+        android:textSize="@dimen/abc_text_size_medium_material"
+        android:textColor="@color/abc_primary_text_material_dark"
+        android:id="@+id/action_add_tag"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/action_add_tag"
+        android:background="@drawable/inputselector"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/button_material_dark" />
+    <TextView
+        android:padding="10dp"
+        android:textSize="@dimen/abc_text_size_medium_material"
+        android:textColor="@color/abc_primary_text_material_dark"
+        android:id="@+id/action_delete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/action_delete"
+        android:background="@drawable/inputselector"/>
+</LinearLayout>

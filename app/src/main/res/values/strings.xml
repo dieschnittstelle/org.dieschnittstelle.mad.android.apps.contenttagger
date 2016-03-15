@@ -1,10 +1,25 @@
 <resources>
+    <string name="blind_short_1">lorem</string>
+    <string name="blind_short_2">ipsum</string>
+    <string name="blind_mid_1">lorem ipsum</string>
+    <string name="blind_long_1">lorem ipsum dolor sit amet sed consectetur</string>
     <string name="app_name">ContentTagger</string>
     <string name="action_settings">Settings</string>
     <string name="action_edit">Edit</string>
     <string name="action_delete">Delete</string>
     <string name="view_tags_overview">Tags</string>
     <string name="action_add">Add</string>
+    <string name="action_clear_all_data">Reset</string>
+    <string name="action_add_tag">Add tag</string>
+    <string name="action_select_tag">Use tag</string>
+    <string name="action_accept_new_tag">Ok</string>
+    <string name="action_cancel_new_tag">Cancel</string>
+    <string name="title_create_tag">New Tag</string>
+    <string name="title_edit_tag">Edit Tag</string>
+    <string name="action_create">Create</string>
+    <string name="action_update">Update</string>
+    <string name="action_select">Select</string>
+    <string name="action_cancel">Cancel</string>
     <string name="menuitem_tags">Tags</string>
     <string name="menuitem_media">Media</string>
     <string name="menuitem_places">Places</string>

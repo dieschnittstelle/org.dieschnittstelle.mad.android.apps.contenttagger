@@ -8,8 +8,14 @@
         <item name="android:textColorPrimary">@color/abc_primary_text_material_dark</item>
         <item name="actionMenuTextColor">@color/abc_primary_text_material_dark</item>
         <item name="android:textColorSecondary">@color/abc_secondary_text_material_dark</item>
-
+        <!--<item name="android:alertDialogTheme">@style/alert_dialog_theme</item>-->
     </style>
+
+    <item name="text_background_light" type="color">#5b5b5b</item>
+    <item name="primary_action" type="color">#32cd32</item>
+    <item name="primary_action_selected" type="color">#7d32cd32</item>
+    <item name="secondary_action" type="color">@color/background_material_light</item>
+    <item name="secondary_action_selected" type="color">#E0E0E0</item>
 
     <item name="itemmenu_heading_background" type="color">#1a1a1a</item>
     <item name="background_contrast_analysis1" type="color">#32cd32</item>

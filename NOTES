@@ -6,6 +6,8 @@ Toolbar
 Sidemenu
 - DrawerLayout necessary
 - Activity needs to use setDisplayHomeAsUpEnabled() and setHomeAsUpIndicator() on toolbar for opening it via a custom "main menu" icon
+- Root of sidemenu view needs to specifiy android:layout_gravity="start" (!)
+
 
 RecyclerView
 - For using RecyclerView add dependency: compile 'com.android.support:recyclerview-v7:+'

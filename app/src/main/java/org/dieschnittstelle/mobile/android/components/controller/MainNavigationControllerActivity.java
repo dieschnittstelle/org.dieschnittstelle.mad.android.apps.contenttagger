@@ -2,6 +2,9 @@ package org.dieschnittstelle.mobile.android.components.controller;
 
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
@@ -46,13 +49,18 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
         appPackage = getApplicationContext().getPackageName();
         setContentView(getResources().getIdentifier("main_activity", "layout", appPackage)/*R.layout.main_activity*/);
 
-        // read out the toolbar from the layout and set it as actionbar
+        /*
+         * initialise the toolbar
+         */
         Toolbar toolbar = (Toolbar) findViewById(getResources().getIdentifier("main_toolbar","id",appPackage) /*R.id.main_toolbar*/);
         setSupportActionBar(toolbar);
         // the following statements allow to open the drawer menu on pressing the "home" icon and set a custom home icon
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(getResources().getIdentifier("ic_drawer","drawable",appPackage)/*R.drawable.ic_drawer*/);
-        // this allows to react to opening/closing the drawer - not really necessary
+
+        /*
+         * initialise the main menu
+         */
         this.drawerLayout = (DrawerLayout) findViewById(getResources().getIdentifier("main_drawer_layout","id",appPackage) /*R.id.main_drawer_layout*/);
         this.drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, 0, 0) {
 
@@ -70,7 +78,6 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
 
         ((DrawerLayout) findViewById(getResources().getIdentifier("main_drawer_layout","id",appPackage) /*R.id.main_drawer_layout*/)).setDrawerListener(drawerToggle);
 
-        // initialise the drawer
         this.mainMenu = (ListView) findViewById(getResources().getIdentifier("main_menu","id",appPackage)); // (ListView) findViewById(R.id.main_menu);
         this.mainMenuOptions = getResources().getStringArray(getResources().getIdentifier("main_menu_items","array",appPackage)); // getResources().getStringArray(R.array.main_menu_items);
         this.mainMenuOptionsControllerClassnames = getResources().getStringArray(getResources().getIdentifier("main_menu_controllers","array",appPackage)); // getResources().getStringArray(R.array.main_menu_controllers);
@@ -97,14 +104,48 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String option = adapter.getItem(position);
                 mainMenu.setItemChecked(position, true);
-                drawerLayout.closeDrawer(mainMenu);
+                drawerLayout.closeDrawer(findViewById(getResources().getIdentifier("main_menu_container","id",appPackage)));
                 Log.i(logger, "onItemClick(): " + option);
                 showViewForOption(position);
             }
 
         });
 
-        // determine the initial view
+        /*
+         * initialise the clear-all action if it exists
+         */
+        View clearAllAction = findViewById(getResources().getIdentifier("action_clear_all_data","id",appPackage));
+        if (clearAllAction != null) {
+            Log.d(logger,"main view provides clear-all action: " + clearAllAction);
+            clearAllAction.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        // try to read out the metadata for the database - assuming we use sugar orm
+                        ApplicationInfo ai = getPackageManager().getApplicationInfo(appPackage, PackageManager.GET_META_DATA);
+                        Bundle metaData = ai.metaData;
+                        if (metaData == null) {
+                            Log.i(logger, "no metadata specified in manifest for application. Cannot reset database...");
+                        } else {
+                            String database = metaData.getString("DATABASE");
+                            Log.i(logger,"about to delete database: " + database);
+                            deleteDatabase(database);
+                            MainNavigationControllerActivity.this.finish();
+                        }
+                    }
+                    catch (Exception e) {
+                        Log.e(logger,"got exception trying to access application metadata: " + e,e);
+                    }
+                }
+            });
+        }
+        else {
+            Log.d(logger, "not clear-all action provided.");
+        }
+
+        /*
+         * show the initial view
+         */
         showViewForOption(getResources().getInteger(getResources().getIdentifier("main_menu_initial_view","integer",appPackage) /*R.integer.main_menu_initial_view*/));
     }
 
