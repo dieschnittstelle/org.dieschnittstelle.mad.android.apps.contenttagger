@@ -151,19 +151,10 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
         Tag.readAll(Tag.class, this);
     }
 
-    public void onPause() {
-        super.onPause();
-        Log.d(logger, "onPause()");
-    }
-
-    public void onStop() {
-        super.onPause();
-        Log.d(logger, "onStop()");
-    }
-
     public void onDestroy() {
         super.onDestroy();
-        Log.d(logger, "onDestroy()");
+        // we remove the fragment as event listener
+        eventDispatcher.unbindController(this);
     }
 
     public void onDetach() {

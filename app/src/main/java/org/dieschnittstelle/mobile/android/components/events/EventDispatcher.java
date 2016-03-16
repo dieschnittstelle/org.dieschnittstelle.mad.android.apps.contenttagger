@@ -31,7 +31,7 @@ public class EventDispatcher {
 	/*
 	 * the map of event listeners
 	 */
-	private Map<String, List<EventListener>> alllisteners = new HashMap<String, List<EventListener>>();
+	private Map<String, List<EventListenerWrapper>> alllisteners = new HashMap<String, List<EventListenerWrapper>>();
 
 	// allow to pass an activity on whose uithread the listener will be run
 	public void addEventListener(EventListenerOwner owner,EventMatcher eventMatcher, boolean runOnUIThread,EventListener callback) {
@@ -52,20 +52,20 @@ public class EventDispatcher {
 			}
 		} else {
 			Log.i(logger, "adding new event listener for event " + eventMatcher.toIdentifier());
-			List<EventListener> currentlisteners = this.alllisteners.get(eventMatcher.toIdentifier());
+			List<EventListenerWrapper> currentlisteners = this.alllisteners.get(eventMatcher.toIdentifier());
 			if (currentlisteners != null) {
 				Log.i(logger, "adding listener to existing listeners.");
 				currentlisteners.add(callback);
 			} else {
 				Log.i(logger, "creating new event listener list.");
 				alllisteners.put(eventMatcher.toIdentifier(),
-						new ArrayList<EventListener>(Arrays.asList(new EventListener[] { callback })));
+						new ArrayList<EventListenerWrapper>(Arrays.asList(new EventListenerWrapper[] { callback })));
 			}
 		}
 	}
 
 	public void notifyListeners(Event event) {
-		List<EventListener> currentlisteners = alllisteners.get(event.toIdentifier());
+		List<EventListenerWrapper> currentlisteners = alllisteners.get(event.toIdentifier());
 		if (currentlisteners != null) {
 			Log.i(logger, "will notify " + currentlisteners.size() + " listeners of event: " + event.toIdentifier());
 			for (EventListener listener : currentlisteners) {
@@ -84,6 +84,10 @@ public class EventDispatcher {
 		// we represent the original matcher here
 		private EventMatcher eventMatcher;
 		private boolean runOnUIThread;
+
+		public EventListenerOwner getOwner() {
+			return this.owner;
+		}
 
 		public EventListenerWrapper(EventListenerOwner owner,EventMatcher eventMatcher, boolean runOnUIThread,EventListener callback) {
 			this.owner = owner;
@@ -133,5 +137,19 @@ public class EventDispatcher {
 		}
 	}
 
-//	public void unbindController()
+	/*
+	 * remove all listeners for some given owner
+	 */
+	public void unbindController(EventListenerOwner owner) {
+		for (String event : this.alllisteners.keySet()) {
+			List<EventListenerWrapper> currentListeners = this.alllisteners.get(event);
+			for (int i=currentListeners.size()-1;i>=0;i--) {
+				if (currentListeners.get(i).getOwner() == owner) {
+					Log.d(logger,"removing listener for " + event + " and owner: " + owner);
+					currentListeners.remove(i);
+				}
+			}
+		}
+	}
+
 }

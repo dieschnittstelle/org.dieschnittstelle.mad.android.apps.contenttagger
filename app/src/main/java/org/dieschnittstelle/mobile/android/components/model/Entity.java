@@ -143,12 +143,16 @@ public abstract class Entity {
                 Type[] typeParameters = ((ParameterizedType)field.getGenericType()).getActualTypeArguments();
                 if (typeParameters.length > 0 && Entity.class.isAssignableFrom((Class<?>)typeParameters[0])) {
                     try {
-                        entityAssociations.append(field.getName());
-                        entityAssociations.append(FIELDVALUE_SEPARATOR);
                         field.setAccessible(true);
-                        Log.d(logger, "prePersist(): field contains entity values.");
-                        entityAssociations.append(prePersistEntityAssociation((Collection<Entity>)field.get(this)));
-                        entityAssociations.append(FIELD_SEPARATOR);
+                        String assocs = prePersistEntityAssociation((Collection<Entity>) field.get(this));
+                        if (assocs.length() > 0) {
+                            entityAssociations.append(field.getName());
+                            entityAssociations.append(FIELDVALUE_SEPARATOR);
+                            field.setAccessible(true);
+                            Log.d(logger, "prePersist(): field contains entity values.");
+                            entityAssociations.append(assocs);
+                            entityAssociations.append(FIELD_SEPARATOR);
+                        }
                     }
                     catch (Exception e) {
                         Log.e(logger,"prePersist(): cannot process collection field " + field.getName() + ". Got exception: " + e,e);

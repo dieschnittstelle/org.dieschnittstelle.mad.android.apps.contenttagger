@@ -81,8 +81,8 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
             }
         });
 
-        // we instantiate the reusable wrapper for the add tag dialogs
-        AddTagDialogController.getInstance().attach(getActivity());
+        // we instantiate the reusable wrapper for the add tag dialogs and specify that on adding tags update shall be executed
+        AddTagDialogController.getInstance().attach(getActivity(), true);
 
         // we use an options menu
         setHasOptionsMenu(true);
@@ -139,6 +139,12 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
         super.onResume();
         // read all notes
         Entity.readAll(Note.class, this);
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        // we remove the fragment as event listener
+        eventDispatcher.unbindController(this);
     }
 
     @Override

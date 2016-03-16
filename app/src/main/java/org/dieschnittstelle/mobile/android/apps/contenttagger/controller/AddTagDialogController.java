@@ -56,6 +56,11 @@ public class AddTagDialogController implements EventListenerOwner {
      */
     private Map<String, Tag> tagsMap = new HashMap<String, Tag>();
 
+    /*
+     * specify whether we update on add
+     */
+    private boolean updateOnAdd;
+
     private AddTagDialogController() {
 
     }
@@ -68,6 +73,11 @@ public class AddTagDialogController implements EventListenerOwner {
      * on attachment, we instantiate the dialogs again, but check whether it is necessary
      */
     public void attach(Activity controller) {
+        attach(controller,false);
+    }
+
+    public void attach(Activity controller, boolean updateOnAdd) {
+        this.updateOnAdd = updateOnAdd;
         if (controller == this.controller) {
             return;
         }
@@ -137,6 +147,10 @@ public class AddTagDialogController implements EventListenerOwner {
                                     if (existingTag != null) {
                                         Log.d(logger, "add existing tag to note...");
                                         data.addTag(existingTag);
+                                        if (updateOnAdd) {
+                                            Log.d(logger, "run updateOnAdd...");
+                                            ((Entity)data).update();
+                                        }
                                     } else {
                                         confirmNewTagDialog.show(new Entity[]{new Tag(input.getText().toString()), (Entity) data});
                                     }
@@ -179,6 +193,10 @@ public class AddTagDialogController implements EventListenerOwner {
                                 @Override
                                 protected void onPostExecute(Tag tag) {
                                     ((Taggable) data[1]).addTag(tag);
+                                    if (updateOnAdd) {
+                                        Log.d(logger, "run updateOnAdd...");
+                                        data[1].update();
+                                    }
                                 }
 
                             }.execute((Tag) data[0]);
