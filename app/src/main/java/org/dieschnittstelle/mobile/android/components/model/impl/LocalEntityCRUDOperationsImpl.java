@@ -19,21 +19,17 @@ public class LocalEntityCRUDOperationsImpl implements EntityCRUDOperations {
     protected static String logger = "LocalEntityCRUDOperationsImpl";
 
     @Override
-    public Entity create(Class<? extends Entity> entityClass, Entity e) {
+    public void create(Class<? extends Entity> entityClass, Entity e) {
         Log.d(logger, "create():" + e);
         Long id = SugarRecord.save(e);
         Log.d(logger, "create(): id: " + id);
         e.setId(id);
-
-        return e;
     }
 
     @Override
-    public Entity update(Class<? extends Entity> entityClass, Entity e) {
+    public void update(Class<? extends Entity> entityClass, Entity e) {
         Log.d(logger, "update():" + e);
         SugarRecord.save(e);
-
-        return e;
     }
 
     @Override

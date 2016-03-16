@@ -1,11 +1,7 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
-import android.app.AlertDialog;
 import android.app.Fragment;
-import android.content.DialogInterface;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,13 +14,12 @@ import android.widget.TextView;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note;
-import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
-import org.dieschnittstelle.mobile.android.components.controller.CustomDialogController;
 import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
 import org.dieschnittstelle.mobile.android.components.events.EventListener;
+import org.dieschnittstelle.mobile.android.components.events.EventListenerOwner;
 import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
 import org.dieschnittstelle.mobile.android.components.model.Entity;
 import org.dieschnittstelle.mobile.android.components.view.ListItemViewHolderTitleSubtitle;
@@ -34,7 +29,7 @@ import java.util.List;
 /**
  * Created by master on 12.03.16.
  */
-public class NotesOverviewFragment extends Fragment implements EventGenerator {
+public class NotesOverviewFragment extends Fragment implements EventGenerator, EventListenerOwner {
 
     protected static String logger = "NotesOverviewFragment";
 
@@ -48,15 +43,54 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator {
      */
     private EntityListAdapter<Note,ListItemViewHolderTitleSubtitle> adapter;
 
-    /*
-     * the alert dialog for adding a tag
-     */
-    private CustomDialogController<?> addTagDialog;
 
     /*
-     * instantiate the adapter oncreateView
+     * set event listeners in oncreate
      */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
+        // intialise the listeners for crud events
+        eventDispatcher.addEventListener(this,new EventMatcher(Event.CRUD.TYPE, Event.CRUD.CREATED, Note.class), false, new EventListener<Note>() {
+            @Override
+            public void onEvent(Event<Note> event) {
+                adapter.addItem(event.getData());
+            }
+        });
+        eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.UPDATED, Note.class), false, new EventListener<Note>() {
+            @Override
+            public void onEvent(Event<Note> event) {
+                adapter.updateItem(event.getData());
+            }
+        });
+        eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.DELETED, Note.class), false, new EventListener<Note>() {
+            @Override
+            public void onEvent(Event<Note> event) {
+                adapter.removeItem(event.getData());
+            }
+        });
+        // we only react to reading out all tags if we have generated the event ourselves
+        eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.READALL, Note.class, this), false, new EventListener<List<Note>>() {
+            @Override
+            public void onEvent(Event<List<Note>> event) {
+                for (Note note : event.getData()) {
+                    Log.i(logger, "found tags on note: " + note.getTags());
+                }
+                adapter.addItems(event.getData());
+            }
+        });
+
+        // we instantiate the reusable wrapper for the add tag dialogs
+        AddTagDialogController.getInstance().attach(getActivity());
+
+        // we use an options menu
+        setHasOptionsMenu(true);
+    }
+
+    /*
+         * instantiate the adapter in oncreateView
+         */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
@@ -86,21 +120,7 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator {
                         entity.delete();
                         break;
                     case R.id.action_add_tag:
-                        new AsyncTask<Void,Void,List<Tag>>() {
-
-                            @Override
-                            protected List<Tag> doInBackground(Void... params) {
-                                return (List<Tag>)Tag.readAllSync(Tag.class);
-                            }
-
-                            @Override
-                            protected void onPostExecute(List<Tag> tags) {
-                                // we add the first element of the tags to the note
-                                entity.addTag(tags.get(0));
-                                // and then we try to update it!
-                                entity.update();
-                            }
-                        }.execute();
+                        AddTagDialogController.getInstance().show(entity);
                         break;
                 }
             }
@@ -111,47 +131,8 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator {
             }
         };
 
-        // intialise the listeners for crud events
-        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.CREATED, Note.class), new EventListener<Note>() {
-            @Override
-            public void onEvent(Event<Note> event) {
-                adapter.addItem(event.getData());
-            }
-        });
-        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.UPDATED, Note.class), new EventListener<Note>() {
-            @Override
-            public void onEvent(Event<Note> event) {
-                adapter.updateItem(event.getData());
-            }
-        });
-        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.DELETED, Note.class), new EventListener<Note>() {
-            @Override
-            public void onEvent(Event<Note> event) {
-                adapter.removeItem(event.getData());
-            }
-        });
-        // we only react to reading out all tags if we have generated the event ourselves
-        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.READALL, Note.class, this), new EventListener<List<Note>>() {
-            @Override
-            public void onEvent(Event<List<Note>> event) {
-                for (Note note : event.getData()) {
-                    Log.i(logger,"found tags on note: " + note.getTags());
-                }
-                adapter.addItems(event.getData());
-            }
-        });
-
-
-        // we initialise the dialogs
-        initialiseAddTagDialog();
-
-        // we use an options menu
-        setHasOptionsMenu(true);
-
         return contentView;
     }
-
-
 
     @Override
     public void onResume() {
@@ -159,20 +140,6 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator {
         // read all notes
         Entity.readAll(Note.class, this);
     }
-
-
-    private void initialiseAddTagDialog() {
-
-        this.addTagDialog = new CustomDialogController<Object>(this.getActivity(),R.layout.dialog_select_tag) {
-            @Override
-            protected void onBindViewHolder(boolean bound) {
-                this.title.setText(R.string.action_select_tag);
-                this.primaryButton.setText(R.string.action_select);
-            }
-        };
-
-    }
-
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {

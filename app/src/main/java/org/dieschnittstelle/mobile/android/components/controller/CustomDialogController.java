@@ -75,6 +75,15 @@ public abstract class CustomDialogController<T> {
         input = (EditText)view.findViewById(controller.getResources().getIdentifier("input","id",appPackage));
         primaryButton = (Button)view.findViewById(controller.getResources().getIdentifier("button_primary","id",appPackage));
         secondaryButton = (Button)view.findViewById(controller.getResources().getIdentifier("button_secondary","id",appPackage));
+        // if we have a secondary button, we set an onclick listener
+        if (secondaryButton != null) {
+            this.secondaryButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    hide();
+                }
+            });
+        }
     }
 
     /*

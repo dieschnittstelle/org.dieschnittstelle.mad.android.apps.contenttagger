@@ -1,5 +1,6 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.model;
 
+import com.orm.dsl.Ignore;
 import com.orm.dsl.Table;
 
 import org.dieschnittstelle.mobile.android.components.model.Entity;
@@ -16,6 +17,8 @@ public class Note extends Entity implements Taggable, Serializable {
 
     private String title;
 
+    @Ignore
+    // this attribute will be ignored when persisting / reading because it will be handled via the associations string in prePersist()/postLoad()
     private List<Tag> tags = new ArrayList<Tag>();
 
     private String content;
@@ -23,6 +26,8 @@ public class Note extends Entity implements Taggable, Serializable {
     private long lastmodified = System.currentTimeMillis();
 
     private Long id;
+
+    private String associations;
 
     public Note() {
 
@@ -67,6 +72,16 @@ public class Note extends Entity implements Taggable, Serializable {
         return this.id;
     }
 
+    @Override
+    public void setAssociations(String assoc) {
+        this.associations = assoc;
+    }
+
+    @Override
+    public String getAssociations() {
+        return this.associations;
+    }
+
     public void setTags(List<Tag> tags) {
         this.tags = tags;
     }
@@ -91,6 +106,17 @@ public class Note extends Entity implements Taggable, Serializable {
     public void create()  {
         this.lastmodified = System.currentTimeMillis();
         super.create();
+    }
+
+    @Override
+    public String toString() {
+        return "Note{" +
+                "title='" + title + '\'' +
+                ", tags=" + tags +
+                ", content='" + content + '\'' +
+                ", lastmodified=" + lastmodified +
+                ", id=" + id +
+                '}';
     }
 
     public void update()  {

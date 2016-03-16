@@ -7,9 +7,12 @@ import java.util.List;
  */
 public interface EntityCRUDOperations {
 
-    public Entity create(Class<? extends Entity> entityClass, Entity e);
+    /*
+     * create and update are assumed to be implemented using side effects on the entity being passed!
+     */
+    public void create(Class<? extends Entity> entityClass, Entity e);
 
-    public Entity update(Class<? extends Entity> entityClass, Entity e);
+    public void update(Class<? extends Entity> entityClass, Entity e);
 
     public boolean delete(Class<? extends Entity> entityClass, Entity e);
 

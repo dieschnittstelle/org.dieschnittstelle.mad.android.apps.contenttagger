@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:background="@color/background_material_light">
+
+        <include layout="@layout/dialog_title"/>
+        
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="10dp" />
+
+        <AutoCompleteTextView
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:paddingBottom="0dp"
+            android:id="@+id/input"
+            android:textSize="16sp"
+            android:textColor="@color/primary_text_default_material_light"
+            android:background="@drawable/edittext_border"
+            android:layout_width="match_parent"
+            android:inputType="textNoSuggestions"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <include layout="@layout/dialog_buttonbar_1"/>
+</LinearLayout>

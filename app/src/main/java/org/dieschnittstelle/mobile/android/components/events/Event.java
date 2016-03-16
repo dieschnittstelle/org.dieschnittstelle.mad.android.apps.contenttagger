@@ -6,6 +6,8 @@ import org.dieschnittstelle.mobile.android.components.model.Entity;
 
 public class Event<T> {
 
+	public static String TYPE_SEPARATOR = "|";
+
 	// we declare some constants for event types
 	public static final class CRUD {
 		public static final String TYPE = "crud";
@@ -18,6 +20,18 @@ public class Event<T> {
 
 	public static final class UI {
 		public static final String TYPE = "ui";
+	}
+
+	public static String OR(String...  types) {
+		StringBuffer buf = new StringBuffer();
+		for (int i=0;i<types.length;i++) {
+			buf.append(types[i]);
+			if (i < (types.length-1)) {
+				buf.append(TYPE_SEPARATOR);
+			}
+		}
+
+		return buf.toString();
 	}
 
 	private String group;

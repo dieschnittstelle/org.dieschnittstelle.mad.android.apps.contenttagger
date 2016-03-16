@@ -27,13 +27,14 @@ import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
 import org.dieschnittstelle.mobile.android.components.events.EventListener;
+import org.dieschnittstelle.mobile.android.components.events.EventListenerOwner;
 import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
 import org.dieschnittstelle.mobile.android.components.view.ListItemViewHolderTitleSubtitle;
 
 /**
  * Created by master on 12.03.16.
  */
-public class TagsOverviewFragment extends Fragment implements EventGenerator {
+public class TagsOverviewFragment extends Fragment implements EventGenerator, EventListenerOwner {
 
     protected static String logger = "TagsOverviewFragment";
 
@@ -55,6 +56,39 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        /*
+         * declare the listeners for the crud events in onCreate() rather than in onCreateView() in order to avoid duplicated additions
+         */
+        eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.CREATED, Tag.class), false, new EventListener<Tag>() {
+            @Override
+            public void onEvent(Event<Tag> event) {
+                Log.d(logger,"onEvent(): tag created");
+                adapter.addItem(event.getData());
+            }
+        });
+        eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.UPDATED, Tag.class), false, new EventListener<Tag>() {
+            @Override
+            public void onEvent(Event<Tag> event) {
+                Log.d(logger,"onEvent(): tag updated");
+                adapter.updateItem(event.getData());
+            }
+        });
+        eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.DELETED, Tag.class), false, new EventListener<Tag>() {
+            @Override
+            public void onEvent(Event<Tag> event) {
+                Log.d(logger,"onEvent(): tag deleted");
+                adapter.removeItem(event.getData());
+            }
+        });
+        // we only react to reading out all tags if we have generated the event ourselves
+        eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.READALL, Tag.class, this), false, new EventListener<List<Tag>>() {
+            @Override
+            public void onEvent(Event<List<Tag>> event) {
+                Log.d(logger, "onEvent(): tags read");
+                adapter.addItems(event.getData());
+            }
+        });
 
         // declare that we use an options menu
         setHasOptionsMenu(true);
@@ -102,35 +136,6 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator {
             }
         };
 
-        /*
-         * declare the listeners for the crud events!
-         */
-        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.CREATED, Tag.class), new EventListener<Tag>() {
-            @Override
-            public void onEvent(Event<Tag> event) {
-                adapter.addItem(event.getData());
-            }
-        });
-        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.UPDATED, Tag.class), new EventListener<Tag>() {
-            @Override
-            public void onEvent(Event<Tag> event) {
-                adapter.updateItem(event.getData());
-            }
-        });
-        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.DELETED, Tag.class), new EventListener<Tag>() {
-            @Override
-            public void onEvent(Event<Tag> event) {
-                adapter.removeItem(event.getData());
-            }
-        });
-        // we only react to reading out all tags if we have generated the event ourselves
-        eventDispatcher.addEventListener(new EventMatcher(Event.CRUD.TYPE, Event.CRUD.READALL, Tag.class, this), new EventListener<List<Tag>>() {
-            @Override
-            public void onEvent(Event<List<Tag>> event) {
-                adapter.addItems(event.getData());
-            }
-        });
-
         // we initialise the dialog
         createEditTagDialogController();
 
@@ -141,8 +146,29 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator {
     @Override
     public void onResume() {
         super.onResume();
+        Log.d(logger, "onResume()");
 
         Tag.readAll(Tag.class, this);
+    }
+
+    public void onPause() {
+        super.onPause();
+        Log.d(logger, "onPause()");
+    }
+
+    public void onStop() {
+        super.onPause();
+        Log.d(logger, "onStop()");
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(logger, "onDestroy()");
+    }
+
+    public void onDetach() {
+        super.onDestroy();
+        Log.d(logger, "onDetach()");
     }
 
     public void createEditTagDialogController() {

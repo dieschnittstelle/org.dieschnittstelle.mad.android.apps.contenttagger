@@ -22,6 +22,16 @@ public class Tag extends Entity implements Serializable {
         return this.id;
     }
 
+    @Override
+    public void setAssociations(String assoc) {
+
+    }
+
+    @Override
+    public String getAssociations() {
+        return null;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
