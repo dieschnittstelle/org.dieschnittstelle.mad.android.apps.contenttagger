@@ -1,31 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_material_dark"
     android:padding="10dp">
     <EditText
+        android:layout_alignParentTop="true"
         android:id="@+id/title"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
+        android:textColorHint="@color/edittext_hint"
+        android:hint="@string/hint_notes_editview_title"
+        android:focusable="true"
         android:background="@drawable/edittext_border_darkbackground"
+        android:textCursorDrawable="@drawable/edittext_cursor_darkbackground"
         />
     <Space
+        android:id="@+id/space"
+        android:layout_below="@id/title"
         android:layout_width="match_parent"
         android:layout_height="10dp" />
     <ScrollView
+        android:layout_below="@id/space"
         android:id="@+id/ScrollView01"
         android:layout_width="match_parent"
         android:layout_height="300dp"
         android:background="@drawable/input_rectangle_border">
 
+        <!-- background hides the bar underneath -->
         <EditText
             android:id="@+id/content"
             android:maxLength="99999999"
+            android:textSize="13dp"
+            android:padding="5dp"
+            android:hint="@string/blind_large_1"
+            android:textColorHint="@color/edittext_hint"
+            android:background="@android:color/transparent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textCursorDrawable="@drawable/edittext_cursor_darkbackground"
             />
 
     </ScrollView>
 
-</LinearLayout>
+    <include layout="@layout/tagsbar"/>
+
+</RelativeLayout>

@@ -26,4 +26,5 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:+'
     compile 'org.osmdroid:osmdroid-android:5.1@aar'
     compile 'com.github.satyan:sugar:1.4'
+    compile 'org.apmem.tools:layouts:1.10@aar'
 }

@@ -224,4 +224,17 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
         super.onConfigurationChanged(newConfig);
         this.drawerToggle.onConfigurationChanged(newConfig);
     }
+
+    /*
+     * we need to override onBackPressed and pop from the fragment manager
+     */
+    @Override
+    public void onBackPressed() {
+        if (getFragmentManager().getBackStackEntryCount() > 0) {
+            getFragmentManager().popBackStack();
+        }
+        else {
+            super.onBackPressed();
+        }
+    }
 }

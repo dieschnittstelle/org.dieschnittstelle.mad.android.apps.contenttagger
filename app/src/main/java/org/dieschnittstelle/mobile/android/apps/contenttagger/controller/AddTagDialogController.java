@@ -138,6 +138,7 @@ public class AddTagDialogController implements EventListenerOwner {
                     protected void onBindViewHolder(boolean bound) {
                         if (!bound) {
                             this.title.setText(R.string.action_select_tag);
+                            this.input.setHint(R.string.hint_select_tag);
                             this.primaryButton.setText(R.string.action_select);
                             this.primaryButton.setOnClickListener(new View.OnClickListener() {
                                 @Override

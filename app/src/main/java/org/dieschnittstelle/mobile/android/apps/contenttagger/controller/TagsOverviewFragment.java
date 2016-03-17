@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -47,6 +48,11 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
      * the adapter for the listview
      */
     private EntityListAdapter<Tag,ListItemViewHolderTitleSubtitle> adapter;
+
+    /*
+     * the content view that is only created once and reused over pause/resume
+     */
+    private View contentView;
 
     /*
      * the dialog for creating/editing tags
@@ -99,57 +105,65 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
 
-        // the view - note that in order to obtain match_parent height, it needs to be instantiated as follows, see http://stackoverflow.com/questions/24503760/cardview-layout-width-match-parent-does-not-match-parent-recyclerview-width
-        View contentView = inflater.inflate(R.layout.tags_overview_contentview, container, false);
+        if (this.contentView == null) {
 
-        // create an adapter for the recycler view
-        this.adapter = new EntityListAdapter<Tag,ListItemViewHolderTitleSubtitle>(this.getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.tags_overview_itemview, R.layout.tags_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit}) {
+            // the view - note that in order to obtain match_parent height, it needs to be instantiated as follows, see http://stackoverflow.com/questions/24503760/cardview-layout-width-match-parent-does-not-match-parent-recyclerview-width
+            this.contentView = inflater.inflate(R.layout.tags_overview_contentview, container, false);
 
-            @Override
-            public ListItemViewHolderTitleSubtitle onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
-                return new ListItemViewHolderTitleSubtitle(view,adapter);
-            }
+            // create an adapter for the recycler view
+            this.adapter = new EntityListAdapter<Tag, ListItemViewHolderTitleSubtitle>(this.getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.tags_overview_itemview, R.layout.tags_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit}) {
 
-            @Override
-            public void onBindEntityViewHolder(ListItemViewHolderTitleSubtitle holder, Tag entity, int position) {
-                holder.title.setText(entity.getName() + "-" + entity.getId());
-            }
-
-            @Override
-            protected void onSelectEntity(Tag entity) {
-                Log.i(logger, "onSelectEntity(): " + entity);
-            }
-
-            @Override
-            protected void onSelectEntityMenuAction(int action, Tag entity) {
-                Log.i(logger, "onSelectEntityMenuAction(): " + action + "@" + entity);
-                if (action == R.id.action_delete) {
-                    entity.delete();
+                @Override
+                public ListItemViewHolderTitleSubtitle onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
+                    return new ListItemViewHolderTitleSubtitle(view, adapter);
                 }
-                else if (action == R.id.action_edit) {
-                    editTagDialogController.show(entity);
+
+                @Override
+                public void onBindEntityViewHolder(ListItemViewHolderTitleSubtitle holder, Tag entity, int position) {
+                    holder.title.setText(entity.getName() + "-" + entity.getId());
                 }
-            }
 
-            @Override
-            public void onBindEntityMenuDialog(EntityListAdapter.ItemMenuDialogViewHolder holder, Tag item) {
-                ((TextView)holder.heading).setText(item.getName());
-            }
-        };
+                @Override
+                protected void onSelectEntity(Tag entity) {
+                    Log.i(logger, "onSelectEntity(): " + entity);
+                }
 
-        // we initialise the dialog
-        createEditTagDialogController();
+                @Override
+                protected void onSelectEntityMenuAction(int action, Tag entity) {
+                    Log.i(logger, "onSelectEntityMenuAction(): " + action + "@" + entity);
+                    if (action == R.id.action_delete) {
+                        entity.delete();
+                    } else if (action == R.id.action_edit) {
+                        editTagDialogController.show(entity);
+                    }
+                }
 
-        return contentView;
+                @Override
+                public void onBindEntityMenuDialog(EntityListAdapter.ItemMenuDialogViewHolder holder, Tag item) {
+                    ((TextView) holder.heading).setText(item.getName());
+                }
+            };
+
+            // we initialise the dialog
+            createEditTagDialogController();
+        }
+
+        return this.contentView;
     }
 
-    // we start populating the view onresumt
+    // we start populating the view onresume unless readall has already been run before
+    private boolean readall;
+
     @Override
     public void onResume() {
         super.onResume();
         Log.d(logger, "onResume()");
-
-        Tag.readAll(Tag.class, this);
+        // set the title
+        ((ActionBarActivity)getActivity()).setTitle(R.string.menuitem_tags);
+        if (!readall) {
+            Tag.readAll(Tag.class, this);
+            readall = true;
+        }
     }
 
     public void onDestroy() {
@@ -169,6 +183,7 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
             protected void onBindViewHolder(boolean bound) {
                 // the listener for create/edit only needs to be set once
                 this.title.setText(data.created() ? R.string.title_edit_tag : R.string.title_create_tag);
+                this.input.setHint(R.string.hint_create_tag);
                 if (this.data.created()) {
                     this.input.setText(this.data.getName());
                 }

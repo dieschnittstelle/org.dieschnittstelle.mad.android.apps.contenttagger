@@ -2,6 +2,7 @@ package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,7 +43,9 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
     /**
      * the adapter for the listview
      */
-    private EntityListAdapter<Note,ListItemViewHolderTitleSubtitle> adapter;
+    private EntityListAdapter<Note,NotesListItemViewHolder> adapter;
+
+    private View contentView;
 
 
     /*
@@ -85,9 +88,6 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
             }
         });
 
-        // we instantiate the reusable wrapper for the add tag dialogs and specify that on adding tags update shall be executed
-        AddTagDialogController.getInstance().attach(getActivity(), true);
-
         // we use an options menu
         setHasOptionsMenu(true);
     }
@@ -98,55 +98,92 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-        View contentView = inflater.inflate(R.layout.notes_overview_contentview,container,false);
 
-        this.adapter = new EntityListAdapter<Note, ListItemViewHolderTitleSubtitle>(getActivity(),(RecyclerView)contentView.findViewById(R.id.listview),R.layout.notes_overview_itemview,R.layout.notes_overview_itemmenu,new int[]{R.id.action_delete, R.id.action_edit, R.id.action_add_tag}) {
-            @Override
-            public ListItemViewHolderTitleSubtitle onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
-                return new ListItemViewHolderTitleSubtitle(view, adapter);
-            }
+        // we create the view only once and reuse it afterwards
+        if (this.contentView == null) {
+            this.contentView = inflater.inflate(R.layout.notes_overview_contentview, container, false);
 
-            @Override
-            public void onBindEntityViewHolder(ListItemViewHolderTitleSubtitle holder, Note entity, int position) {
-                holder.title.setText(entity.getTitle());
-                holder.subtitle.setText(String.valueOf(entity.getLastmodified()));
-            }
-
-            @Override
-            protected void onSelectEntity(Note entity) {
-                // on select, we show the editview, passing the entity's id!
-                ((MainNavigationControllerActivity)getActivity()).showView(NotesEditviewFragment.class,MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID,entity.getId()),String.format(getResources().getString(R.string.title_edit_note), entity.getTitle()),true);
-            }
-
-            @Override
-            protected void onSelectEntityMenuAction(int action, final Note entity) {
-                switch (action) {
-                    case R.id.action_delete:
-                        entity.delete();
-                        break;
-                    case R.id.action_edit:
-                        ((MainNavigationControllerActivity)getActivity()).showView(NotesEditviewFragment.class,MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID,entity.getId()),getResources().getString(R.string.title_create_note),true);
-                        break;
-                    case R.id.action_add_tag:
-                        AddTagDialogController.getInstance().show(entity);
-                        break;
+            this.adapter = new EntityListAdapter<Note, NotesListItemViewHolder>(getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.notes_overview_itemview, R.layout.notes_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit, R.id.action_add_tag}) {
+                @Override
+                public NotesListItemViewHolder onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
+                    return new NotesListItemViewHolder(view, adapter);
                 }
-            }
 
-            @Override
-            public void onBindEntityMenuDialog(ItemMenuDialogViewHolder holder, Note item) {
-                ((TextView)holder.heading).setText(item.getTitle());
-            }
-        };
+                @Override
+                public void onBindEntityViewHolder(NotesListItemViewHolder holder, Note entity, int position) {
+                    Log.d(logger,"onBindEntityViewHolder(): id is: " + entity.getId());
+                    holder.title.setText(entity.getTitle());
+                    holder.subtitle.setText(String.valueOf(entity.getLastmodified()));
+                    int numOfTags = entity.getTags() != null ? entity.getTags().size() : 0;
+                    if (numOfTags == 0) {
+                        holder.numOfTags.setVisibility(View.GONE);
+                    }
+                    else {
+                        holder.numOfTags.setVisibility(View.VISIBLE);
+                    }
+                    holder.numOfTags.setText(String.valueOf(numOfTags));
+                }
 
-        return contentView;
+                @Override
+                protected void onSelectEntity(Note entity) {
+                    // on select, we show the editview, passing the entity's id!
+                    ((MainNavigationControllerActivity) getActivity()).showView(NotesEditviewFragment.class, MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID, entity.getId()), getResources().getString(R.string.title_edit_note), true);
+                }
+
+                @Override
+                protected void onSelectEntityMenuAction(int action, final Note entity) {
+                    switch (action) {
+                        case R.id.action_delete:
+                            entity.delete();
+                            break;
+                        case R.id.action_edit:
+                            ((MainNavigationControllerActivity) getActivity()).showView(NotesEditviewFragment.class, MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID, entity.getId()), getResources().getString(R.string.title_create_note), true);
+                            break;
+                        case R.id.action_add_tag:
+                            AddTagDialogController.getInstance().show(entity);
+                            break;
+                    }
+                }
+
+                @Override
+                public void onBindEntityMenuDialog(ItemMenuDialogViewHolder holder, Note item) {
+                    ((TextView) holder.heading).setText(item.getTitle());
+                }
+            };
+        }
+
+        return this.contentView;
     }
+
+    // we use an own listitem holder for representing the number of tags
+    private class NotesListItemViewHolder extends ListItemViewHolderTitleSubtitle {
+
+        public TextView numOfTags;
+
+        public NotesListItemViewHolder(View itemView, EntityListAdapter adapter) {
+            super(itemView,adapter);
+            this.numOfTags = (TextView)itemView.findViewById(R.id.numOfTags);
+        }
+
+    }
+
+
+    // track whether we already have read all entries
+    private boolean readall;
 
     @Override
     public void onResume() {
         super.onResume();
-        // read all notes
-        Entity.readAll(Note.class, this);
+        // set the title
+        ((ActionBarActivity)getActivity()).setTitle(R.string.menuitem_notes);
+        // read all notes - updates will be dealt with by event listeners
+        if (!readall) {
+            Entity.readAll(Note.class, this);
+            readall = true;
+        }
+        // we instantiate the reusable wrapper for the add tag dialogs and specify that on adding tags update shall be executed
+        // as the component is resuable, this must be called for each onResume as settings might have been changed in the meantime
+        AddTagDialogController.getInstance().attach(getActivity(), true);
     }
 
     public void onDestroy() {

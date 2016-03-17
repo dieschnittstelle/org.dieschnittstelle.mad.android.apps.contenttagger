@@ -28,6 +28,9 @@ Icons
 Maps
 - following https://github.com/osmdroid/osmdroid/wiki/How-to-use-the-osmdroid-library
 
+Flow Layout for tagsview with linebreaks
+- use https://github.com/ApmeM/android-flowlayout
+
 Sugar ORM
 - see http://satyan.github.io/sugar/getting-started.html
 - @Table annotation: http://stackoverflow.com/questions/24503760/cardview-layout-width-match-parent-does-not-match-parent-recyclerview-width

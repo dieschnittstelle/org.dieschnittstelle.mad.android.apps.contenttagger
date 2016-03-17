@@ -3,10 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity">
     <item
-        android:icon="@drawable/ic_save_white_24dp"
-        android:id="@+id/action_save"
+        android:icon="@drawable/ic_bookmark_border_white_24dp"
+        android:id="@+id/action_add_tag"
         android:orderInCategory="100"
-        android:title="@string/action_save"
+        android:title="@string/action_add_tag"
         app:showAsAction="always" />
     <item
         android:icon="@drawable/ic_delete_white_24dp"
@@ -15,10 +15,10 @@
         android:title="@string/action_delete"
         app:showAsAction="always" />
     <item
-        android:icon="@drawable/ic_bookmark_border_white_24dp"
-        android:id="@+id/action_add_tag"
+        android:icon="@drawable/ic_save_white_24dp"
+        android:id="@+id/action_save"
         android:orderInCategory="100"
-        android:title="@string/action_add_tag"
+        android:title="@string/action_save"
         app:showAsAction="always" />
     <item
         android:icon="@drawable/ic_content_paste_white_24dp"

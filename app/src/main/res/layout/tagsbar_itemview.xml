@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- as spacing does not seem to work as described in the documentation of FlowLayout, we add spaces manually... -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:orientation="horizontal" android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="3dp"
+            android:paddingRight="0dp"
+            android:background="@drawable/rectangle_primary_filled">
+            <TextView
+                android:layout_alignParentLeft="true"
+                android:id="@+id/tagname"
+                android:textSize="12sp"
+                android:textColor="@color/secondary_action"
+                android:text="lorem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"/>
+            <Space
+                android:layout_toRightOf="@id/tagname"
+                android:id="@+id/space"
+                android:layout_centerVertical="true"
+                android:layout_width="1dp"
+                android:layout_height="10dp" />
+            <ImageView
+                android:src="@drawable/ic_clear_white_18dp"
+                android:layout_toRightOf="@id/space"
+                android:id="@+id/action_remove_tag"
+                android:adjustViewBounds="true"
+                android:layout_width="wrap_content"
+                android:layout_height="15dp"
+                android:layout_centerVertical="true"/>
+        </RelativeLayout>
+        <Space
+            android:layout_width="5dp"
+            android:layout_height="10dp" />
+    </LinearLayout>
+    <Space
+        android:layout_width="10dp"
+        android:layout_height="5dp" />
+</LinearLayout>

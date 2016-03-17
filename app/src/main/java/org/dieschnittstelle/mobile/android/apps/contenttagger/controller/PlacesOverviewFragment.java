@@ -2,6 +2,7 @@ package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,6 +40,9 @@ public class PlacesOverviewFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        // set the title
+        ((ActionBarActivity)getActivity()).setTitle(R.string.menuitem_places);
+
         // on appearing we will focus the map
         this.mapController = map.getController();
         mapController.setZoom(12);
