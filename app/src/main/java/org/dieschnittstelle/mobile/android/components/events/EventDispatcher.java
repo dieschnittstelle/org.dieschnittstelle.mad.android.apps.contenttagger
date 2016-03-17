@@ -38,7 +38,7 @@ public class EventDispatcher {
 		doAddEventListener(eventMatcher,new EventListenerWrapper(owner,eventMatcher,runOnUIThread,callback));
 	}
 
-	public void doAddEventListener(EventMatcher eventMatcher, EventListenerWrapper callback) {
+	private void doAddEventListener(EventMatcher eventMatcher, EventListenerWrapper callback) {
 
 		// check whether the event type contains a "|" symbol that identifies
 		// more than a single event

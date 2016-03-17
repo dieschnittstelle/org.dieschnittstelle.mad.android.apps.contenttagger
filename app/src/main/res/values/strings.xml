@@ -14,11 +14,15 @@
     <string name="action_select_tag">Select Tag</string>
     <string name="title_create_tag">New Tag</string>
     <string name="title_edit_tag">Edit Tag</string>
+    <string name="title_create_note">New Note</string>
+    <string name="title_edit_note">Edit Note: %s</string>
     <string name="action_create">Create</string>
     <string name="action_update">Update</string>
     <string name="action_select">Select</string>
     <string name="action_confirm">Ok</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_paste_default">Paste Default Content</string>
+    <string name="action_save">Save</string>
     <string name="message_confirm_create_tag">Do you want to create \'%s\' as a new tag?</string>
     <string name="menuitem_tags">Tags</string>
     <string name="menuitem_media">Media</string>

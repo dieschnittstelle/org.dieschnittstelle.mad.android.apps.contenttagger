@@ -15,6 +15,7 @@ import android.widget.TextView;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note;
 import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
+import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
@@ -51,7 +52,10 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // intialise the listeners for crud events
+        /*
+         * intialise the listeners for crud events
+         * note that adapter methods do not need to be run on the uithread!
+         */
         eventDispatcher.addEventListener(this,new EventMatcher(Event.CRUD.TYPE, Event.CRUD.CREATED, Note.class), false, new EventListener<Note>() {
             @Override
             public void onEvent(Event<Note> event) {
@@ -110,7 +114,8 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
 
             @Override
             protected void onSelectEntity(Note entity) {
-
+                // on select, we show the editview, passing the entity's id!
+                ((MainNavigationControllerActivity)getActivity()).showView(NotesEditviewFragment.class,MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID,entity.getId()),String.format(getResources().getString(R.string.title_edit_note), entity.getTitle()),true);
             }
 
             @Override
@@ -118,6 +123,9 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
                 switch (action) {
                     case R.id.action_delete:
                         entity.delete();
+                        break;
+                    case R.id.action_edit:
+                        ((MainNavigationControllerActivity)getActivity()).showView(NotesEditviewFragment.class,MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID,entity.getId()),getResources().getString(R.string.title_create_note),true);
                         break;
                     case R.id.action_add_tag:
                         AddTagDialogController.getInstance().show(entity);
@@ -155,8 +163,8 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_add) {
-            Note note = new Note("lorem","ipsum dolor sit amet");
-            note.create();
+            ((MainNavigationControllerActivity)getActivity()).showView(NotesEditviewFragment.class,MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID,-1L),getResources().getString(R.string.title_create_note),true);
+
             return true;
         }
         return false;

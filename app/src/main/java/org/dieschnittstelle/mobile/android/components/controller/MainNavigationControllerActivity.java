@@ -171,9 +171,9 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
 
     }
 
-    public void showView(Class<Fragment> viewclass, Bundle args, String title, boolean addToBackstack) {
+    public void showView(Class<?> viewclass, Bundle args, String title, boolean addToBackstack) {
         try {
-            Fragment view = viewclass.newInstance();
+            Fragment view = (Fragment)viewclass.newInstance();
             if (args != null) {
                 view.setArguments(args);
             }
@@ -199,6 +199,15 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
         getSupportActionBar().setTitle(title);
     }
 
+    /*
+     * some utility
+     */
+    public static Bundle createArguments(String key,Long value) {
+        Bundle bun = new Bundle();
+        bun.putLong(key,value);
+
+        return bun;
+    }
 
     /*
      * the following methods are taken over from the android developer doc

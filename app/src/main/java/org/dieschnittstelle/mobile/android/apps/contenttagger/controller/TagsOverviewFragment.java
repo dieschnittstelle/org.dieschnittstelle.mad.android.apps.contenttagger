@@ -59,6 +59,7 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
 
         /*
          * declare the listeners for the crud events in onCreate() rather than in onCreateView() in order to avoid duplicated additions
+         * note that adapter methods do not need to be run on the uithread!
          */
         eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.CREATED, Tag.class), false, new EventListener<Tag>() {
             @Override

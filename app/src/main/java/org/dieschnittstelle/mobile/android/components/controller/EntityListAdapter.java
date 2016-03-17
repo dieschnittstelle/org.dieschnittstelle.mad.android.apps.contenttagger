@@ -149,9 +149,9 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
 
     protected abstract void onSelectEntityMenuAction(int action,E entity);
 
-    /**********************************************************************
-     * handling feedback from crud operations
-     **********************************************************************/
+    /****************************************************************************************************************
+     * handling feedback from crud operations - note that these methods do not need to invoked from the ui thread!!!
+     ****************************************************************************************************************/
 
     public void addItem(E item) {
         this.entities.add(item);

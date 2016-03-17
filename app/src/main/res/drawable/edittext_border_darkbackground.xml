@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- for obtaining the line underneath of an input field... see http://stackoverflow.com/questions/9211208/how-to-draw-border-on-just-one-side-of-a-linear-layout -->
+<!-- this overlays two rectangles above each other, where the first one provides the desired line color -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/primary_action" />
+        </shape>
+    </item>
+    <item android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/background_material_dark" />
+        </shape>
+    </item>
+</layer-list>
