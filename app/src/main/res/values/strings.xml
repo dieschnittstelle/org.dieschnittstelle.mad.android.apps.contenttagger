@@ -32,6 +32,7 @@
     <string name="menuitem_media">Media</string>
     <string name="menuitem_places">Places</string>
     <string name="menuitem_notes">Notes</string>
+    <string name="tag_lable">#%s</string>
     <string-array name="main_menu_items">
         <item>@string/menuitem_tags</item>
         <item>@string/menuitem_notes</item>

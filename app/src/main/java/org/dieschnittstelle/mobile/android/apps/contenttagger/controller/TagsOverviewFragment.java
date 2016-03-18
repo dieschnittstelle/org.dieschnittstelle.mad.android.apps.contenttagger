@@ -24,6 +24,7 @@ import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
 import org.dieschnittstelle.mobile.android.components.controller.CustomDialogController;
 import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
+import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
@@ -120,12 +121,13 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
 
                 @Override
                 public void onBindEntityViewHolder(ListItemViewHolderTitleSubtitle holder, Tag entity, int position) {
-                    holder.title.setText(entity.getName() + "-" + entity.getId());
+                    holder.title.setText(String.format(getResources().getString(R.string.tag_lable),entity.getName()));
                 }
 
                 @Override
                 protected void onSelectEntity(Tag entity) {
                     Log.i(logger, "onSelectEntity(): " + entity);
+                    ((MainNavigationControllerActivity)getActivity()).showView(TaggableOverviewFragment.class,MainNavigationControllerActivity.createArguments(TaggableOverviewFragment.ARG_TAG_ID,entity.getId()),true);
                 }
 
                 @Override
@@ -140,7 +142,7 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
 
                 @Override
                 public void onBindEntityMenuDialog(EntityListAdapter.ItemMenuDialogViewHolder holder, Tag item) {
-                    ((TextView) holder.heading).setText(item.getName());
+                    ((TextView) holder.heading).setText(String.format(getResources().getString(R.string.tag_lable), item.getName()));
                 }
             };
 

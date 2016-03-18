@@ -54,7 +54,7 @@ public class Event<T> {
 		this.data = data;
 	}
 
-	public Event(String group, String type, Class<? extends Entity> targetClass, T data) {
+	public Event(String group, String type, Class targetClass, T data) {
 		this.group = group;
 		this.type = type;
 		this.target = targetClass.getName();
@@ -76,7 +76,7 @@ public class Event<T> {
 		this.context = context;
 	}
 
-	public Event(String group, String type, Class<? extends Entity> targetClass,EventGenerator context, T data) {
+	public Event(String group, String type, Class targetClass,EventGenerator context, T data) {
 		this.group = group;
 		this.type = type;
 		this.target = targetClass.getName();

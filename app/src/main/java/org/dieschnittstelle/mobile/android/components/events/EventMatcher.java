@@ -15,7 +15,7 @@ public class EventMatcher<T> extends Event<T> {
         super(group,type,target);
     }
 
-    public EventMatcher(String group, String type, Class<? extends Entity> targetClass) {
+    public EventMatcher(String group, String type, Class targetClass) {
         super(group,type,targetClass.getName());
     }
 
@@ -23,7 +23,7 @@ public class EventMatcher<T> extends Event<T> {
         super(group,type,target,context);
     }
 
-    public EventMatcher(String group, String type, Class<? extends Entity> targetClass,EventGenerator context) {
+    public EventMatcher(String group, String type, Class targetClass,EventGenerator context) {
         super(group,type,targetClass.getName(),context);
     }
 

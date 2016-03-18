@@ -127,7 +127,7 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
                 @Override
                 protected void onSelectEntity(Note entity) {
                     // on select, we show the editview, passing the entity's id!
-                    ((MainNavigationControllerActivity) getActivity()).showView(NotesEditviewFragment.class, MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID, entity.getId()), getResources().getString(R.string.title_edit_note), true);
+                    ((MainNavigationControllerActivity) getActivity()).showView(NotesEditviewFragment.class, MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID, entity.getId()), true);
                 }
 
                 @Override
@@ -137,7 +137,7 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
                             entity.delete();
                             break;
                         case R.id.action_edit:
-                            ((MainNavigationControllerActivity) getActivity()).showView(NotesEditviewFragment.class, MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID, entity.getId()), getResources().getString(R.string.title_create_note), true);
+                            ((MainNavigationControllerActivity) getActivity()).showView(NotesEditviewFragment.class, MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID, entity.getId()), true);
                             break;
                         case R.id.action_add_tag:
                             AddTagDialogController.getInstance().show(entity);
@@ -200,7 +200,7 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_add) {
-            ((MainNavigationControllerActivity)getActivity()).showView(NotesEditviewFragment.class,MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID,-1L),getResources().getString(R.string.title_create_note),true);
+            ((MainNavigationControllerActivity)getActivity()).showView(NotesEditviewFragment.class,MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID,-1L),true);
 
             return true;
         }

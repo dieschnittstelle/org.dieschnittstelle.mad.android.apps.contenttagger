@@ -159,7 +159,8 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
 
         if (optionsControllerClassname != null && !"".equals(optionsControllerClassname.trim())) {
             try {
-                showView((Class<Fragment>) Class.forName(optionsControllerClassname), null, optionName, false);
+                setTitle(optionName);
+                showView((Class<Fragment>) Class.forName(optionsControllerClassname), null, false);
             }
             catch (ClassNotFoundException cnfe) {
                 Log.e(logger, "controller class cannot be found: " + optionsControllerClassname,cnfe);
@@ -171,13 +172,12 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
 
     }
 
-    public void showView(Class<?> viewclass, Bundle args, String title, boolean addToBackstack) {
+    public void showView(Class<?> viewclass, Bundle args, boolean addToBackstack) {
         try {
             Fragment view = (Fragment)viewclass.newInstance();
             if (args != null) {
                 view.setArguments(args);
             }
-            setTitle(title);
             FragmentTransaction ft = getFragmentManager().beginTransaction();
             ft.replace(getResources().getIdentifier("main_contentview","id",appPackage), view);
             if (addToBackstack) {
