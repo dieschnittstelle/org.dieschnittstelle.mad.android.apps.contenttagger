@@ -127,7 +127,7 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
                 @Override
                 protected void onSelectEntity(Note entity) {
                     // on select, we show the editview, passing the entity's id!
-                    ((MainNavigationControllerActivity) getActivity()).showView(NotesEditviewFragment.class, MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID, entity.getId()), true);
+                    ((MainNavigationControllerActivity) getActivity()).showView(NotesReadviewFragment.class, MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID, entity.getId()), true);
                 }
 
                 @Override

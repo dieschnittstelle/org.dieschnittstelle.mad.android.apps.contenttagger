@@ -34,3 +34,6 @@ Flow Layout for tagsview with linebreaks
 Sugar ORM
 - see http://satyan.github.io/sugar/getting-started.html
 - @Table annotation: http://stackoverflow.com/questions/24503760/cardview-layout-width-match-parent-does-not-match-parent-recyclerview-width
+
+Receiving send intents
+- http://developer.android.com/training/sharing/receive.html

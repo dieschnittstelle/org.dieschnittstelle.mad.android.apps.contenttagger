@@ -1,7 +1,11 @@
 package org.dieschnittstelle.mobile.android.components.controller;
 
+import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -15,11 +19,13 @@ import android.util.Log;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /*
  * removed dependencies to application specific resources by using getResources().getIdentifier(), see http://stackoverflow.com/questions/3476430/how-to-get-a-resource-id-with-a-known-resource-name
@@ -143,11 +149,25 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
             Log.d(logger, "not clear-all action provided.");
         }
 
+        // check whether we have received a send event
+
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            // Handle other intents, such as being started from the home screen
+            handleSendActionForType(type,intent);
+        }
+        else {
         /*
          * show the initial view
          */
-        showViewForOption(getResources().getInteger(getResources().getIdentifier("main_menu_initial_view","integer",appPackage) /*R.integer.main_menu_initial_view*/));
+            showViewForOption(getResources().getInteger(getResources().getIdentifier("main_menu_initial_view", "integer", appPackage) /*R.integer.main_menu_initial_view*/));
+        }
     }
+
+
 
     /*
      * this takes an integer for some option and reads out the resources to initialise the view
@@ -159,6 +179,8 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
 
         if (optionsControllerClassname != null && !"".equals(optionsControllerClassname.trim())) {
             try {
+                // clear the backstack
+                getFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
                 setTitle(optionName);
                 showView((Class<Fragment>) Class.forName(optionsControllerClassname), null, false);
             }
@@ -173,6 +195,7 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
     }
 
     public void showView(Class<?> viewclass, Bundle args, boolean addToBackstack) {
+        hideKeyboard(this);
         try {
             Fragment view = (Fragment)viewclass.newInstance();
             if (args != null) {
@@ -204,7 +227,7 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
      */
     public static Bundle createArguments(String key,Long value) {
         Bundle bun = new Bundle();
-        bun.putLong(key,value);
+        bun.putLong(key, value);
 
         return bun;
     }
@@ -230,6 +253,7 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
      */
     @Override
     public void onBackPressed() {
+        hideKeyboard(this);
         if (getFragmentManager().getBackStackEntryCount() > 0) {
             getFragmentManager().popBackStack();
         }
@@ -237,4 +261,28 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
             super.onBackPressed();
         }
     }
+
+    /**
+     * hide keyboard taken from http://stackoverflow.com/questions/26911469/hide-keyboard-when-navigating-from-a-fragment-to-another
+     * @param ctx
+     */
+    public static void hideKeyboard(Context ctx) {
+        InputMethodManager inputManager = (InputMethodManager) ctx
+                .getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        // check if no view has focus:
+        View v = ((Activity) ctx).getCurrentFocus();
+        if (v == null)
+            return;
+
+        inputManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
+    }
+
+    /*
+     * handle send actions
+     */
+    private void handleSendActionForType(String type,Intent intent) {
+        Toast.makeText(this,"handling send action for type " + type + ": " + intent.getStringExtra(Intent.EXTRA_TEXT),Toast.LENGTH_LONG).show();
+    }
+
 }

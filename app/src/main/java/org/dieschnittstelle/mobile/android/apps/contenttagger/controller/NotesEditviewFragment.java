@@ -37,14 +37,19 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
     /*
      * the ui elements
      */
-    private EditText title;
-    private EditText content;
-    private TagsbarController tagsbarController;
+    protected EditText title;
+    protected EditText content;
+    protected TagsbarController tagsbarController;
 
     /*
      * the model object that we use
      */
     protected Note note;
+
+    /*
+     * we need to handle obsoletion of readview (which is a subclass) here...
+     */
+    protected boolean obsolete;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -53,6 +58,12 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
         // we read out the id from the arguments
         long noteId = getArguments().getLong(ARG_NOTE_ID);
 
+        addEventListeners();
+
+        setHasOptionsMenu(true);
+    }
+
+    protected void addEventListeners() {
         // set listeners
         EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.OR(Event.CRUD.DELETED,Event.CRUD.UPDATED,Event.CRUD.CREATED), Note.class), false, new EventListener<Note>() {
             @Override
@@ -77,26 +88,30 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
             }
         });
 
-        setHasOptionsMenu(true);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // we read out the id from the arguments
-        long noteId = getArguments().getLong(ARG_NOTE_ID);
-        if (noteId > -1) {
-            ((ActionBarActivity)getActivity()).setTitle(R.string.title_edit_note);
-            // read all notes - reaction will be dealt with by event handler
-            Note.read(Note.class, noteId, this);
+        if (obsolete) {
+            Log.i(logger,"view is obsolete.");
         }
         else {
-            ((ActionBarActivity)getActivity()).setTitle(R.string.title_create_note);
-            note = new Note();
-        }
+            Log.d(logger, "onResume(): " + this.getClass());
+            // we read out the id from the arguments
+            long noteId = getArguments().getLong(ARG_NOTE_ID);
+            if (noteId > -1) {
+                ((ActionBarActivity) getActivity()).setTitle(R.string.title_edit_note);
+                // read all notes - reaction will be dealt with by event handler
+                Note.read(Note.class, noteId, this);
+            } else {
+                ((ActionBarActivity) getActivity()).setTitle(R.string.title_create_note);
+                note = new Note();
+            }
 
-        // we instantiate the reusable wrapper for the add tag dialogs - needs to be done for each onResume() as settings might have changed in the meantime
-        AddTagDialogController.getInstance().attach(getActivity());
+            // we instantiate the reusable wrapper for the add tag dialogs - needs to be done for each onResume() as settings might have changed in the meantime
+            AddTagDialogController.getInstance().attach(getActivity());
+        }
     }
 
     @Override

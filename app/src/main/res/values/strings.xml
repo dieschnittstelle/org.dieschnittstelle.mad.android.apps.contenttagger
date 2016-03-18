@@ -16,7 +16,9 @@
     <string name="title_create_tag">New Tag</string>
     <string name="title_edit_tag">Edit Tag</string>
     <string name="title_create_note">New Note</string>
+    <string name="title_remove_tag">Remove Tag</string>
     <string name="title_edit_note">Edit Note</string>
+    <string name="title_read_note">Note</string>
     <string name="hint_notes_editview_title">Title</string>
     <string name="hint_create_tag">Name of Tag</string>
     <string name="hint_select_tag">Name of Tag</string>
@@ -24,10 +26,12 @@
     <string name="action_update">Update</string>
     <string name="action_select">Select</string>
     <string name="action_confirm">Ok</string>
+    <string name="action_remove">Remove</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_paste_default">Paste Default Content</string>
     <string name="action_save">Save</string>
-    <string name="message_confirm_create_tag">Do you want to create \'%s\' as a new tag?</string>
+    <string name="message_confirm_create_tag">Do you want to create #%s as a new tag?</string>
+    <string name="message_confirm_remove_tag">Do you want to remove #%s?</string>
     <string name="menuitem_tags">Tags</string>
     <string name="menuitem_media">Media</string>
     <string name="menuitem_places">Places</string>

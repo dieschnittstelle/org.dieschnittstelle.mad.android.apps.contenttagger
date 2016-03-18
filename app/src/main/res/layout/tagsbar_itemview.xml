@@ -11,17 +11,18 @@
         <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:orientation="horizontal" android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingLeft="3dp"
+            android:paddingLeft="5dp"
             android:paddingRight="0dp"
             android:background="@drawable/rectangle_primary_filled">
             <TextView
                 android:layout_alignParentLeft="true"
                 android:id="@+id/tagname"
-                android:textSize="12sp"
+                android:textSize="14sp"
                 android:textColor="@color/secondary_action"
                 android:text="lorem"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingRight="5dp"
                 android:layout_centerVertical="true"/>
             <Space
                 android:layout_toRightOf="@id/tagname"
@@ -35,7 +36,7 @@
                 android:id="@+id/action_remove_tag"
                 android:adjustViewBounds="true"
                 android:layout_width="wrap_content"
-                android:layout_height="15dp"
+                android:layout_height="20dp"
                 android:layout_centerVertical="true"/>
         </RelativeLayout>
         <Space

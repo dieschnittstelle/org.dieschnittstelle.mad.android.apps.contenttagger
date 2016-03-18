@@ -61,6 +61,7 @@ public class AddTagDialogController implements EventListenerOwner {
      */
     private boolean updateOnAdd;
 
+
     private AddTagDialogController() {
 
     }
@@ -148,6 +149,7 @@ public class AddTagDialogController implements EventListenerOwner {
                                     if (existingTag != null) {
                                         Log.d(logger, "add existing tag to note...");
                                         data.addTag(existingTag);
+                                        EventDispatcher.getInstance().notifyListeners(new Event<TagsbarController.TaggableTagBundle>(Event.UI.TYPE, TagsbarController.EVENT_TAG_ADDED, TagsbarController.TaggableTagBundle.class, new TagsbarController.TaggableTagBundle(data, existingTag)));
                                         if (updateOnAdd) {
                                             Log.d(logger, "run updateOnAdd...");
                                             ((Entity)data).update();
@@ -194,6 +196,7 @@ public class AddTagDialogController implements EventListenerOwner {
                                 @Override
                                 protected void onPostExecute(Tag tag) {
                                     ((Taggable) data[1]).addTag(tag);
+                                    EventDispatcher.getInstance().notifyListeners(new Event<TagsbarController.TaggableTagBundle>(Event.UI.TYPE,TagsbarController.EVENT_TAG_ADDED,TagsbarController.TaggableTagBundle.class,new TagsbarController.TaggableTagBundle( ((Taggable) data[1]),tag)));
                                     if (updateOnAdd) {
                                         Log.d(logger, "run updateOnAdd...");
                                         data[1].update();
