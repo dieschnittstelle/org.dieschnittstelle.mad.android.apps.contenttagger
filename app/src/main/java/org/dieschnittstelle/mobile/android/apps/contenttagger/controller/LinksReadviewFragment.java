@@ -12,7 +12,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.EditText;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
@@ -68,6 +70,7 @@ public class LinksReadviewFragment extends Fragment implements EventGenerator, E
         View contentView = inflater.inflate(R.layout.links_readview,container,false);
 
         this.webview = (WebView)contentView.findViewById(R.id.webview);
+        prepareWebview();
 
         // we need to set padding manually on tagsbar as the content view does not use padding
         ViewGroup tagsbar = (ViewGroup)contentView.findViewById(R.id.tagsbar);
@@ -81,6 +84,8 @@ public class LinksReadviewFragment extends Fragment implements EventGenerator, E
         return contentView;
     }
 
+
+
     protected void addEventListeners() {
         // set listeners
         EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.OR(Event.CRUD.DELETED), Link.class), false, new EventListener<Link>() {
@@ -88,7 +93,7 @@ public class LinksReadviewFragment extends Fragment implements EventGenerator, E
             public void onEvent(Event<Link> event) {
                 if (link == event.getData()) {
                     // in case the note is deleted, we mark this as obsolete
-                    Log.i(logger, "link has been deleted. mark myself as obsolete...");
+                  Log.i(logger, "link has been deleted. mark myself as obsolete...");
                     obsolete = true;
                 } else {
                     Log.i(logger, "onEvent(): got " + event.getType() + " event for link, but it involves a different object than the one being edited: " + event.getData() + ". Ignore...");
@@ -110,6 +115,21 @@ public class LinksReadviewFragment extends Fragment implements EventGenerator, E
             }
         });
 
+    }
+
+    /*
+     * see http://stackoverflow.com/questions/10097233/optimal-webview-settings-for-html5-support
+     */
+    private void prepareWebview() {
+       webview.setFocusable(true);
+       webview.setFocusableInTouchMode(true);
+       webview.getSettings().setJavaScriptEnabled(true);
+       webview.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+       webview.getSettings().setDomStorageEnabled(true);
+       webview.getSettings().setDatabaseEnabled(true);
+       webview.getSettings().setAppCacheEnabled(true);
+       webview.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+       webview.setWebViewClient(new WebViewClient());
     }
 
     @Override
