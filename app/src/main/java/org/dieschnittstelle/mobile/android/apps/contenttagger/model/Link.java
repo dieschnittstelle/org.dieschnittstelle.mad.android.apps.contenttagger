@@ -47,7 +47,7 @@ public class Link extends Taggable implements Serializable {
     public void addTag(Tag tag) {
         if (!this.tags.contains(tag)) {
             this.tags.add(tag);
-            tag.addTaggedItem(this);
+            tag.getTaggedItems().add(this);
             addPendingUpdate(tag);
         }
     }
@@ -55,7 +55,7 @@ public class Link extends Taggable implements Serializable {
     @Override
     public void removeTag(Tag tag) {
         this.tags.remove(tag);
-        tag.removeTaggedItem(this);
+        tag.getTaggedItems().remove(this);
         addPendingUpdate(tag);
     }
 
@@ -104,7 +104,7 @@ public class Link extends Taggable implements Serializable {
     public void preDestroy() {
         // before a link is removed, we need to remove it from any tags that are associated with it
         for (Tag tag : this.tags) {
-            tag.removeTaggedItem(this);
+            tag.getTaggedItems().remove(this);
             addPendingUpdate(tag);
         }
     }
