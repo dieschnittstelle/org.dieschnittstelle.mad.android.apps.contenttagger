@@ -1,0 +1,25 @@
+<resources>
+    <string-array name="main_menu_items">
+        <item>@string/menuitem_tags</item>
+        <item>@string/menuitem_notes</item>
+        <item>@string/menuitem_links</item>
+        <item>@string/menuitem_media</item>
+        <item>@string/menuitem_places</item>
+    </string-array>
+    <integer-array name="main_menu_icons">
+        <item>@drawable/ic_bookmark_border_white_24dp</item>
+        <item>@drawable/ic_assignment_ind_white_24dp</item>
+        <item>@drawable/ic_link_white_24dp</item>
+        <item>@drawable/ic_photo_library_white_24dp</item>
+        <item>@drawable/ic_place_white_24dp</item>
+    </integer-array>
+    <string-array name="main_menu_controllers">
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.TagsOverviewFragment</item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.NotesOverviewFragment</item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.LinksOverviewFragment</item>
+        <item></item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.PlacesOverviewFragment</item>
+    </string-array>
+    <!-- this one specifies the initial view -->
+    <integer name="main_menu_initial_view">2</integer>
+</resources>

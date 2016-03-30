@@ -13,7 +13,7 @@ import java.util.List;
  * Created by master on 15.03.16.
  */
 @Table
-public class Note extends Entity implements Taggable, Serializable {
+public class Link extends Entity implements Taggable, Serializable {
 
     private String title;
 
@@ -21,21 +21,21 @@ public class Note extends Entity implements Taggable, Serializable {
     // this attribute will be ignored when persisting / reading because it will be handled via the associations string in prePersist()/postLoad()
     private List<Tag> tags = new ArrayList<Tag>();
 
-    private String content;
+    private long created;
 
-    private long lastmodified = System.currentTimeMillis();
+    private String url;
 
     private Long id;
 
     private String associations;
 
-    public Note() {
+    public Link() {
 
     }
 
-    public Note(String title,String content) {
+    public Link(String title, String url) {
         this.title = title;
-        this.content = content;
+        this.url = url;
     }
 
     @Override
@@ -88,42 +88,36 @@ public class Note extends Entity implements Taggable, Serializable {
         this.tags = tags;
     }
 
-    public String getContent() {
-        return content;
+    public String getUrl() {
+        return url;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setUrl(String url) {
+        this.url = url;
     }
 
-    public long getLastmodified() {
-        return lastmodified;
-    }
-
-    public void setLastmodified(long lastmodified) {
-        this.lastmodified = lastmodified;
-    }
 
     // update last modified on update
     public void create()  {
-        this.lastmodified = System.currentTimeMillis();
+        this.created = System.currentTimeMillis();
         super.create();
     }
 
     @Override
     public String toString() {
-        return "Note{" +
+        return "Link{" +
                 "title='" + title + '\'' +
-                ", tags=" + tags +
-                ", content='" + content + '\'' +
-                ", lastmodified=" + lastmodified +
+                ", url='" + url + '\'' +
+                ", created=" + created +
                 ", id=" + id +
+                ", tags=" + tags +
                 '}';
     }
 
     public void update()  {
-        this.lastmodified = System.currentTimeMillis();
+        this.created = System.currentTimeMillis();
         super.update();
     }
+
 
 }

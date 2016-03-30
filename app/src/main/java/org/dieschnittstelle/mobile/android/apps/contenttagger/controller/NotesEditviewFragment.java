@@ -107,6 +107,8 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
             } else {
                 ((ActionBarActivity) getActivity()).setTitle(R.string.title_create_note);
                 note = new Note();
+                // this is required in order for the tagbar to be available for new notes
+                tagsbarController.bindTaggable(note);
             }
 
             // we instantiate the reusable wrapper for the add tag dialogs - needs to be done for each onResume() as settings might have changed in the meantime

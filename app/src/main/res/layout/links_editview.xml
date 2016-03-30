@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_material_dark"
+    android:padding="10dp">
+    <EditText
+        android:layout_alignParentTop="true"
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textColorHint="@color/edittext_hint"
+        android:hint="@string/hint_links_editview_title"
+        android:focusable="true"
+        android:background="@drawable/edittext_border_darkbackground"
+        android:textCursorDrawable="@drawable/edittext_cursor_darkbackground"
+        />
+    <Space
+        android:id="@+id/space1"
+        android:layout_below="@id/title"
+        android:layout_width="match_parent"
+        android:layout_height="10dp" />
+    <EditText
+        android:id="@+id/url"
+        android:layout_below="@id/space1"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textColorHint="@color/edittext_hint"
+        android:hint="@string/hint_links_editview_url"
+        android:focusable="true"
+        android:inputType="textWebEmailAddress"
+        android:background="@drawable/edittext_border_darkbackground"
+        android:textCursorDrawable="@drawable/edittext_cursor_darkbackground"
+        />
+    <!-- here we could add a webview showing the content of the url
+    <ScrollView
+        android:layout_below="@id/space"
+        android:id="@+id/ScrollView01"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:background="@drawable/input_rectangle_border">
+
+    </ScrollView>-->
+
+    <include layout="@layout/tagsbar"/>
+
+</RelativeLayout>

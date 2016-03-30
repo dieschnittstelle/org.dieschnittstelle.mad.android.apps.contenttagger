@@ -33,28 +33,13 @@
     <string name="message_confirm_create_tag">Do you want to create #%s as a new tag?</string>
     <string name="message_confirm_remove_tag">Do you want to remove #%s?</string>
     <string name="menuitem_tags">Tags</string>
+    <string name="menuitem_links">Links</string>
     <string name="menuitem_media">Media</string>
     <string name="menuitem_places">Places</string>
     <string name="menuitem_notes">Notes</string>
     <string name="tag_lable">#%s</string>
-    <string-array name="main_menu_items">
-        <item>@string/menuitem_tags</item>
-        <item>@string/menuitem_notes</item>
-        <item>@string/menuitem_media</item>
-        <item>@string/menuitem_places</item>
-    </string-array>
-    <integer-array name="main_menu_icons">
-        <item>@drawable/ic_bookmark_border_white_24dp</item>
-        <item>@drawable/ic_assignment_ind_white_24dp</item>
-        <item>@drawable/ic_photo_library_white_24dp</item>
-        <item>@drawable/ic_place_white_24dp</item>
-    </integer-array>
-    <string-array name="main_menu_controllers">
-        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.TagsOverviewFragment</item>
-        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.NotesOverviewFragment</item>
-        <item></item>
-        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.PlacesOverviewFragment</item>
-    </string-array>
-    <!-- this one specifies the initial view -->
-    <integer name="main_menu_initial_view">1</integer>
+    <string name="title_edit_link">Edit Link</string>
+    <string name="title_create_link">New Link</string>
+    <string name="hint_links_editview_title" >Title</string>
+    <string name="hint_links_editview_url" >URL</string>
 </resources>

@@ -30,7 +30,7 @@ import android.widget.Toast;
 /*
  * removed dependencies to application specific resources by using getResources().getIdentifier(), see http://stackoverflow.com/questions/3476430/how-to-get-a-resource-id-with-a-known-resource-name
  */
-public class MainNavigationControllerActivity extends ActionBarActivity {
+public class MainNavigationControllerActivity extends ActionBarActivity implements SendActionDispatcherPresenter {
 
     protected static String logger = "MainNavigationControllerActvity";
 
@@ -190,14 +190,15 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
         }
         else {
             Log.e(logger,"no controller classname specified for option " + optionName + ". Ignore.");
+            Toast.makeText(this,"The option " + optionName + " is currently not handled yet.",Toast.LENGTH_LONG).show();
         }
 
     }
 
-    public void showView(Class<?> viewclass, Bundle args, boolean addToBackstack) {
+    public void showView(Class<? extends Fragment> viewclass, Bundle args, boolean addToBackstack) {
         hideKeyboard(this);
         try {
-            Fragment view = (Fragment)viewclass.newInstance();
+            Fragment view = viewclass.newInstance();
             if (args != null) {
                 view.setArguments(args);
             }
@@ -223,14 +224,24 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
     }
 
     /*
-     * some utility
+     * some utility methods
      */
     public static Bundle createArguments(String key,Long value) {
+        Log.d(logger,"createArguments(): " + key + "=" + value);
         Bundle bun = new Bundle();
         bun.putLong(key, value);
 
         return bun;
     }
+
+    public static Bundle createArguments(String key,String value) {
+        Log.d(logger,"createArguments(): " + key + "=" + value);
+        Bundle bun = new Bundle();
+        bun.putString(key, value);
+
+        return bun;
+    }
+
 
     /*
      * the following methods are taken over from the android developer doc
@@ -282,7 +293,14 @@ public class MainNavigationControllerActivity extends ActionBarActivity {
      * handle send actions
      */
     private void handleSendActionForType(String type,Intent intent) {
-        Toast.makeText(this,"handling send action for type " + type + ": " + intent.getStringExtra(Intent.EXTRA_TEXT),Toast.LENGTH_LONG).show();
+        Log.i(logger, "handling send action for type " + type + ": " + intent.getStringExtra(Intent.EXTRA_TEXT));
+        // check whether given application supports the content type
+        if (getApplication() instanceof SendActionDispatcher) {
+            ((SendActionDispatcher) getApplication()).handleSendActionForType(type, intent, this);
+        }
+        else {
+            Toast.makeText(this,"application cannot handle send actions. Ignore action for type " + type + ": " + intent.getStringExtra(Intent.EXTRA_TEXT),Toast.LENGTH_LONG).show();
+        }
     }
 
 }
