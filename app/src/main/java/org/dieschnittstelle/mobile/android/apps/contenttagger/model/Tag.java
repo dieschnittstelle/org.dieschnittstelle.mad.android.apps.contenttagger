@@ -1,11 +1,14 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.model;
 
+import android.util.Log;
+
 import com.orm.SugarRecord;
 import com.orm.dsl.Table;
 
 import org.dieschnittstelle.mobile.android.components.model.Entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,6 +18,8 @@ import java.util.List;
 @Table
 public class Tag extends Entity implements Serializable {
 
+    protected static String logger = "Entity";
+
     // we need to declare the id locally...
     private Long id;
 
@@ -22,21 +27,23 @@ public class Tag extends Entity implements Serializable {
         return this.id;
     }
 
+    private String associations;
+
     @Override
     public void setAssociations(String assoc) {
-
+        this.associations = assoc;
     }
 
     @Override
     public String getAssociations() {
-        return null;
+        return this.associations;
     }
 
     public void setId(Long id) {
         this.id = id;
     }
 
-    private List<Taggable> taggedItems;
+    private List<Taggable> taggedItems = new ArrayList<Taggable>();
 
     private String name;
 
@@ -64,12 +71,38 @@ public class Tag extends Entity implements Serializable {
         this.taggedItems = taggedItems;
     }
 
+    public void addTaggedItem(Taggable item) {
+        if (!this.taggedItems.contains(item)) {
+            this.taggedItems.add(item);
+            item.getTags().add(this);
+            addPendingUpdate(item);
+        }
+    }
+
+    public void removeTaggedItem(Taggable item) {
+        this.taggedItems.remove(item);
+        item.getTags().remove(this);
+        addPendingUpdate(item);
+    }
+
+    @Override
+    public void preDestroy() {
+        Log.i(logger, "preDestroy(): removing reference from " + this.taggedItems.size() + " tagged items");
+        // before a link is removed, we need to remove it from any tags that are associated with it
+        for (Taggable item : this.taggedItems) {
+            Log.d(logger,"preDestroy(): removing reference from item: " + item);
+            item.getTags().remove(this);
+            Log.d(logger, "preDestroy(): after removal, item is: " + item);
+            addPendingUpdate(item);
+        }
+    }
+
     @Override
     public String toString() {
         return "Tag{" +
                 "id='" + getId() + '\'' +
                 ", name='" + getName() + '\'' +
-                ", taggedItems=" + taggedItems +
+                ", taggedItems=" + taggedItems.size() +
                 '}';
     }
 

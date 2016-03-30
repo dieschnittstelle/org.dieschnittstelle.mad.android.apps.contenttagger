@@ -13,7 +13,7 @@ import java.util.List;
  * Created by master on 15.03.16.
  */
 @Table
-public class Link extends Entity implements Taggable, Serializable {
+public class Link extends Taggable implements Serializable {
 
     private String title;
 
@@ -47,12 +47,16 @@ public class Link extends Entity implements Taggable, Serializable {
     public void addTag(Tag tag) {
         if (!this.tags.contains(tag)) {
             this.tags.add(tag);
+            tag.addTaggedItem(this);
+            addPendingUpdate(tag);
         }
     }
 
     @Override
     public void removeTag(Tag tag) {
         this.tags.remove(tag);
+        tag.removeTaggedItem(this);
+        addPendingUpdate(tag);
     }
 
     @Override
@@ -96,6 +100,14 @@ public class Link extends Entity implements Taggable, Serializable {
         this.url = url;
     }
 
+    @Override
+    public void preDestroy() {
+        // before a link is removed, we need to remove it from any tags that are associated with it
+        for (Tag tag : this.tags) {
+            tag.removeTaggedItem(this);
+            addPendingUpdate(tag);
+        }
+    }
 
     // update last modified on update
     public void create()  {

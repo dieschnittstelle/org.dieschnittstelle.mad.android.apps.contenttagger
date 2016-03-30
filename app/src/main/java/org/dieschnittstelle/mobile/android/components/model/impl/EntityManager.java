@@ -59,7 +59,7 @@ public class EntityManager implements EntityCRUDOperations {
     /*
      * a mapping of classes to entity instances
      */
-    private Map<Class<? extends Entity>, Map<Long,Entity>> entityInstances = new HashMap<Class<? extends Entity>, Map<Long,Entity>>();
+    private Map<Class<? extends Entity>, Map<Long, Entity>> entityInstances = new HashMap<Class<? extends Entity>, Map<Long, Entity>>();
 
     /*
      * a mapping of classes to information on whether all instances have already read out or not
@@ -78,7 +78,7 @@ public class EntityManager implements EntityCRUDOperations {
 
     @Override
     public void update(Class<? extends Entity> entityClass, Entity e) {
-       this.update(entityClass, e, null);
+        this.update(entityClass, e, null);
     }
 
     @Override
@@ -97,15 +97,22 @@ public class EntityManager implements EntityCRUDOperations {
     }
 
     /*
-     * implement methods passing a caller contetx
+     * implement methods passing a caller context
      */
     public void create(final Class<? extends Entity> entityClass, final Entity e, final EventGenerator context) {
+        create(entityClass, e, context, null);
+    }
+
+    public void create(final Class<? extends Entity> entityClass, final Entity e, final EventGenerator context, final CRUDCallback callback) {
         Log.d(logger, "create()");
         if (runEntityCRUDAsync(entityClass)) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    createSync(entityClass,e);
+                    createSync(entityClass, e);
+                    if (callback != null) {
+                        callback.onCRUDCompleted();
+                    }
                     dispatcher.notifyListeners(new Event(Event.CRUD.TYPE, Event.CRUD.CREATED, entityClass, context, e));
                 }
             }).start();
@@ -122,12 +129,19 @@ public class EntityManager implements EntityCRUDOperations {
     }
 
     public void update(final Class<? extends Entity> entityClass, final Entity e, final EventGenerator context) {
+        update(entityClass, e, context, null);
+    }
+
+    public void update(final Class<? extends Entity> entityClass, final Entity e, final EventGenerator context, final CRUDCallback callback) {
         Log.d(logger, "update()");
         if (runEntityCRUDAsync(entityClass)) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     updateSync(entityClass, e);
+                    if (callback != null) {
+                        callback.onCRUDCompleted();
+                    }
                     dispatcher.notifyListeners(new Event(Event.CRUD.TYPE, Event.CRUD.UPDATED, entityClass, context, e));
                 }
             }).start();
@@ -143,13 +157,19 @@ public class EntityManager implements EntityCRUDOperations {
         updateLocalEntity(entityClass, e);
     }
 
-
     public boolean delete(final Class<? extends Entity> entityClass, final Entity e, final EventGenerator context) {
+        return delete(entityClass, e, context, null);
+    }
+
+    public boolean delete(final Class<? extends Entity> entityClass, final Entity e, final EventGenerator context, final CRUDCallback callback) {
         if (runEntityCRUDAsync(entityClass)) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     if (deleteSync(entityClass, e)) {
+                        if (callback != null) {
+                            callback.onCRUDCompleted();
+                        }
                         dispatcher.notifyListeners(new Event(Event.CRUD.TYPE, Event.CRUD.DELETED, entityClass, context, e));
                     }
                 }
@@ -168,8 +188,7 @@ public class EntityManager implements EntityCRUDOperations {
         if (entityCRUDOperations.get(entityClass).get(currentOperationsScope).delete(entityClass, e)) {
             deleteLocalEntity(entityClass, e);
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -179,7 +198,7 @@ public class EntityManager implements EntityCRUDOperations {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    Entity e = readSync(entityClass,id);
+                    Entity e = readSync(entityClass, id);
                     dispatcher.notifyListeners(new Event(Event.CRUD.TYPE, Event.CRUD.READ, entityClass, context, e));
                 }
             }).start();
@@ -191,16 +210,15 @@ public class EntityManager implements EntityCRUDOperations {
 
     public Entity readSync(final Class<? extends Entity> entityClass, final long id) {
         // first try to read locally
-        Entity e = readLocalEntity(entityClass,id);
+        Entity e = readLocalEntity(entityClass, id);
         if (e == null) {
-            Log.d(logger,"readSync(): local instance of entity class " + entityClass + " for id: " + id + " does not exist yet. Read from datasource...");
+            Log.d(logger, "readSync(): local instance of entity class " + entityClass + " for id: " + id + " does not exist yet. Read from datasource...");
             e = entityCRUDOperations.get(entityClass).get(currentOperationsScope).read(entityClass, id);
             addLocalEntity(entityClass, e);
             // we invoke post load which might result in loading associated entities!
             e.postLoad();
-        }
-        else {
-            Log.d(logger,"readSync(): read local instance of entity class " + entityClass + " for id: " + id);
+        } else {
+            Log.d(logger, "readSync(): read local instance of entity class " + entityClass + " for id: " + id);
         }
         return e;
     }
@@ -224,16 +242,16 @@ public class EntityManager implements EntityCRUDOperations {
     public List<Entity> readAllSync(final Class<? extends Entity> entityClass) {
         List<Entity> es = readAllLocalEntities(entityClass);
         if (es == null) {
-            Log.d(logger,"readAllSync(): local instances of entity class " + entityClass + " have not yet been synchronised. Read from datasource...");
+            Log.d(logger, "readAllSync(): local instances of entity class " + entityClass + " have not yet been synchronised. Read from datasource...");
             es = entityCRUDOperations.get(entityClass).get(currentOperationsScope).readAll(entityClass);
             addLocalEntities(entityClass, es);
             // we need to invoke postLoad on the entities (we invoke it on all instances, potentially duplicated loading of associations will be prevented internally)
+            Log.d(logger,"readAllSync(): run postLoad() on " + es.size() + " entities of class " + entityClass);
             for (Entity e : es) {
                 e.postLoad();
             }
-        }
-        else {
-            Log.d(logger,"readAllSync(): read " + es.size() + " local instances of entity class " + entityClass);
+        } else {
+            Log.d(logger, "readAllSync(): read " + es.size() + " local instances of entity class " + entityClass);
         }
         return es;
     }
@@ -246,10 +264,9 @@ public class EntityManager implements EntityCRUDOperations {
         Entity existingEntity = this.entityInstances.get(entityClass).get(entity.getId());
         if (existingEntity != null) {
             if (existingEntity == entity) {
-                Log.i(logger,"addLocalEntity(): entity of class " + entityClass + " and id " + entity.getId() + " already exists, and it IS  identical to the one to be added. This should not cause referential issues");
-            }
-            else {
-                Log.w(logger,"addLocalEntity(): entity of class " + entityClass + " and id " + entity.getId() + " already exists, but it is NOT identical to the one to be added. This might cause referential issues");
+                Log.i(logger, "addLocalEntity(): entity of class " + entityClass + " and id " + entity.getId() + " already exists, and it IS  identical to the one to be added. This should not cause referential issues");
+            } else {
+                Log.w(logger, "addLocalEntity(): entity of class " + entityClass + " and id " + entity.getId() + " already exists, but it is NOT identical to the one to be added. This might cause referential issues");
             }
         }
         this.entityInstances.get(entityClass).put(entity.getId(), entity);
@@ -259,18 +276,17 @@ public class EntityManager implements EntityCRUDOperations {
         prepareLocalEntities(entityClass);
         // there might exists instances in case we have loaded entities referred by some other entities without reading all instances of the given class!
         if (this.entityInstances.get(entityClass).size() > 0) {
-            Log.i(logger,"addLocalEntities(): there already exist local instances of entity class " + entityClass + ". Will only add instances for ids which have not been loaded yet...");
+            Log.i(logger, "addLocalEntities(): there already exist local instances of entity class " + entityClass + ". Will only add instances for ids which have not been loaded yet...");
         }
         for (Entity e : entities) {
             if (this.entityInstances.get(entityClass).containsKey(e.getId())) {
-                Log.d(logger,"addLocalEntities(): entity of class " + entityClass + " with id " + e.getId() + " has already been loaded");
-            }
-            else {
-                Log.d(logger,"addLocalEntities(): add entity of class " + entityClass + " with id " + e.getId());
+                Log.d(logger, "addLocalEntities(): entity of class " + entityClass + " with id " + e.getId() + " has already been loaded");
+            } else {
+                Log.d(logger, "addLocalEntities(): add entity of class " + entityClass + " with id " + e.getId());
                 this.entityInstances.get(entityClass).put(e.getId(), e);
             }
         }
-        this.entityInstancesSynced.put(entityClass,true);
+        this.entityInstancesSynced.put(entityClass, true);
     }
 
     private void updateLocalEntity(Class<? extends Entity> entityClass, Entity entity) {
@@ -280,9 +296,8 @@ public class EntityManager implements EntityCRUDOperations {
         if (existingEntity != null) {
             if (existingEntity == entity) {
                 // this is the normal case, i.e. the entity in the map and the updated entity are identical
-            }
-            else {
-                Log.w(logger,"updateLocalEntity(): entity of class " + entityClass + " and id " + entity.getId() + " already exists, but it is NOT identical to the one to be updated. It will be overriden by the update, which might cause referential problems");
+            } else {
+                Log.w(logger, "updateLocalEntity(): entity of class " + entityClass + " and id " + entity.getId() + " already exists, but it is NOT identical to the one to be updated. It will be overriden by the update, which might cause referential problems");
                 this.entityInstances.get(entityClass).put(entity.getId(), entity);
             }
         }
@@ -311,7 +326,7 @@ public class EntityManager implements EntityCRUDOperations {
 
     private void prepareLocalEntities(Class<? extends Entity> entityClass) {
         if (!this.entityInstances.containsKey(entityClass)) {
-            this.entityInstances.put(entityClass,new HashMap<Long,Entity>());
+            this.entityInstances.put(entityClass, new HashMap<Long, Entity>());
         }
     }
 
@@ -335,6 +350,15 @@ public class EntityManager implements EntityCRUDOperations {
 
     private boolean runEntityCRUDAsync(Class<? extends Entity> entityClass) {
         return entityCRUDAsync.containsKey(entityClass) && entityCRUDAsync.get(entityClass);
+    }
+
+    /*
+     * a crud callback interface for directly receiving notifications on completed crud operations
+     */
+    public static interface CRUDCallback {
+
+        public void onCRUDCompleted();
+
     }
 
 }

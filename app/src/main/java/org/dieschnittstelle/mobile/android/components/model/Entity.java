@@ -13,7 +13,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 /**
@@ -35,6 +37,9 @@ public abstract class Entity {
     // obtain a reference to the event dispatcher
     private static EventDispatcher eventDispatcher = EventDispatcher.getInstance();
 
+    // collect entities that are pending to be updated once this entity is being created or updated
+    private Set<Entity> pendingUpdates = new HashSet<Entity>();
+
     // sugar orm requires Long rather than long - this way one can distinguish between no id and the value 0
     // unfortunately, sugar does not consider properties of superclasses, i.e. we need to add the ids in subclasses
 //    private Long id;
@@ -54,6 +59,12 @@ public abstract class Entity {
     public abstract void setAssociations(String assoc);
 
     public abstract String getAssociations();
+
+    public void addPendingUpdate(Entity e) {
+        if (!this.pendingUpdates.contains(e)) {
+            this.pendingUpdates.add(e);
+        }
+    }
 
     public Entity() {
 
@@ -106,16 +117,44 @@ public abstract class Entity {
      * methods with argument for the caller context
      */
 
-    public void create(EventGenerator context) {
-        EntityManager.getInstance().create(this.getClass(), this, context);
+    public void create(final EventGenerator context) {
+        // here, we need to pass a callback in order to avoid that pending updates are created before an id has been set
+        EntityManager.getInstance().create(this.getClass(), this, context, new EntityManager.CRUDCallback() {
+            @Override
+            public void onCRUDCompleted() {
+                // handle the pending updates
+                handlePendingUpdates(context);
+            }
+        });
     }
+
+
 
     public void update(EventGenerator context) {
         EntityManager.getInstance().update(this.getClass(), this, context);
+        handlePendingUpdates(context);
     }
 
+    private void handlePendingUpdates(EventGenerator context) {
+        if (this.pendingUpdates.size() > 0) {
+        Log.i(logger,"handlePendingUpdates(): handling " + this.pendingUpdates.size() + " pending updates for entity: " + this);
+            for (Entity e : this.pendingUpdates) {
+                e.update(context);
+            }
+            this.pendingUpdates.clear();
+        }
+        else {
+            Log.d(logger,"handlePendingUpdates(): no pending updates exist for entity: " + this);
+        }
+    }
+
+    /*
+     * delete should also be handled automatically!
+     */
     public void delete(EventGenerator context) {
+        preDestroy();
         EntityManager.getInstance().delete(this.getClass(), this, context);
+        handlePendingUpdates(context);
     }
 
     public static Entity read(Class<? extends Entity> entityClass,long id, EventGenerator context) {
@@ -169,6 +208,7 @@ public abstract class Entity {
     public void postLoad() {
         // check whether the entity has persisted associations
         String entityAssociations = getAssociations();
+        Log.d(logger,"postLoad():entity associations for entity of type " + this.getClass() + ": " + entityAssociations);
         // parse associations
         if (entityAssociations != null && !"".equals(entityAssociations)) {
             Log.d(logger,"postLoad(): resolving entity associations: " + entityAssociations);
@@ -222,6 +262,11 @@ public abstract class Entity {
             //Log.d(logger,"postLoad(): no entity associations specified.");
         }
 
+    }
+
+    // given metainformation about associations this could be done automatically, but allow to manually handle the case where associations need to be updated because some entity is being deleted
+    public void preDestroy() {
+        Log.i(logger,"preDestroy(): override for bidirectional associations!");
     }
 
     private String prePersistEntityAssociation(Collection<Entity> entities) {
