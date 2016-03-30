@@ -1,6 +1,8 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
 import android.app.Fragment;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -10,8 +12,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.URLUtil;
 import android.widget.EditText;
+import android.widget.Toast;
 
+import org.apache.http.client.utils.URIUtils;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link;
 import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
@@ -91,7 +96,7 @@ public class LinksEditviewFragment extends Fragment implements EventGenerator, E
                     }
                 }
                 else {
-                    Log.i(logger, "onEvent(): got " + event.getType() + " event for note, but it involves a different object than the one being edited: " + event.getData() + ". Ignore...");
+                    Log.i(logger, "onEvent(): got " + event.getType() + " event for link, but it involves a different object than the one being edited: " + event.getData() + ". Ignore...");
                 }
             }
         });
@@ -192,6 +197,14 @@ public class LinksEditviewFragment extends Fragment implements EventGenerator, E
                     link.delete();
                 }
                 return true;
+            case R.id.action_open:
+                if (URLUtil.isValidUrl(url.getText().toString())) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url.getText().toString())));
+                }
+                else {
+                    Toast.makeText(this.getActivity(),"Cannot open content. The URL is not valid.",Toast.LENGTH_LONG).show();
+                }
+                break;
             case R.id.action_add_tag:
                 AddTagDialogController.getInstance().show(link);
                 break;

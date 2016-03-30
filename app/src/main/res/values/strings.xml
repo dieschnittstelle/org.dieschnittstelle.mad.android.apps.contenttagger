@@ -42,4 +42,6 @@
     <string name="title_create_link">New Link</string>
     <string name="hint_links_editview_title" >Title</string>
     <string name="hint_links_editview_url" >URL</string>
+    <string name="title_read_link">Link</string>
+    <string name="action_open">Open</string>
 </resources>

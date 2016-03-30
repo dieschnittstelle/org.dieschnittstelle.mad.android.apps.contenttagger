@@ -127,7 +127,7 @@ public class LinksOverviewFragment extends Fragment implements EventGenerator, E
                 @Override
                 protected void onSelectEntity(Link entity) {
                     // on select, we show the editview, passing the entity's id!
-                    ((MainNavigationControllerActivity) getActivity()).showView(LinksEditviewFragment.class, MainNavigationControllerActivity.createArguments(LinksEditviewFragment.ARG_LINK_ID, entity.getId()), true);
+                    ((MainNavigationControllerActivity) getActivity()).showView(LinksReadviewFragment.class, MainNavigationControllerActivity.createArguments(LinksEditviewFragment.ARG_LINK_ID, entity.getId()), true);
                 }
 
                 @Override
