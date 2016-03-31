@@ -9,7 +9,9 @@ import org.dieschnittstelle.mobile.android.components.model.Entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by master on 10.03.16.
@@ -83,6 +85,20 @@ public class Tag extends Entity implements Serializable {
         this.taggedItems.remove(item);
         item.getTags().remove(this);
         addPendingUpdate(item);
+    }
+
+    public Map<Class<Taggable>,List<Taggable>> getTaggedItemsAsGroups() {
+        Map<Class<Taggable>,List<Taggable>> itemGroups = new HashMap<Class<Taggable>,List<Taggable>>();
+        for (Taggable item : this.taggedItems) {
+            List<Taggable> currentGroup = itemGroups.get(item.getClass());
+            if (currentGroup == null) {
+                currentGroup = new ArrayList<Taggable>();
+                itemGroups.put((Class<Taggable>)item.getClass(),currentGroup);
+            }
+            currentGroup.add(item);
+        }
+
+        return itemGroups;
     }
 
     @Override

@@ -32,7 +32,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
     /*
      * we expect that the id of the item to be displayed is passed to us, rather than the item itself...
      */
-    public static final String ARG_NOTE_ID = "noteId";
+    public static final String ARG_NOTE_ID = TaggableOverviewFragment.OUTARG_SELECTED_ITEM_ID;
 
     /*
      * the ui elements

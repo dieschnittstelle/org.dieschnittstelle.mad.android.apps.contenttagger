@@ -37,7 +37,7 @@ public class LinksEditviewFragment extends Fragment implements EventGenerator, E
     /*
      * we expect that the id of the item to be displayed is passed to us, rather than the item itself...
      */
-    public static final String ARG_LINK_ID = "linkId";
+    public static final String ARG_LINK_ID = TaggableOverviewFragment.OUTARG_SELECTED_ITEM_ID;
 
     /*
      * check whether we have a linkUrl, which is the case if we are called for some send actiokn

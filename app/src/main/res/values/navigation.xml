@@ -13,6 +13,20 @@
         <item>@drawable/ic_photo_library_white_24dp</item>
         <item>@drawable/ic_place_white_24dp</item>
     </integer-array>
+    <string-array name="main_menu_modelclasses">
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag</item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note</item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link</item>
+        <item></item>
+        <item></item>
+    </string-array>
+    <string-array name="main_menu_detailviews">
+        <item></item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.NotesReadviewFragment</item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.LinksReadviewFragment</item>
+        <item></item>
+        <item></item>
+    </string-array>
     <string-array name="main_menu_controllers">
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.TagsOverviewFragment</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.NotesOverviewFragment</item>
@@ -21,5 +35,5 @@
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.PlacesOverviewFragment</item>
     </string-array>
     <!-- this one specifies the initial view -->
-    <integer name="main_menu_initial_view">2</integer>
+    <integer name="main_menu_initial_view">0</integer>
 </resources>

@@ -3,9 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:background="@drawable/inputselector"
     android:padding="15dp">
     <ImageView
+        android:alpha="0.5"
         android:id="@+id/itemicon"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"/>
@@ -14,7 +14,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/abc_text_size_large_material"
+        android:textAllCaps="true"
         android:paddingLeft="15dp"
-        android:textColor="@color/abc_primary_text_material_dark">
+        android:textColor="@color/edittext_hint">
     </TextView>
 </LinearLayout>

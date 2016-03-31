@@ -82,6 +82,7 @@ public class AddTagDialogController implements EventListenerOwner {
         if (controller == this.controller) {
             return;
         }
+        EventDispatcher.getInstance().unbindController(this);
         this.controller = controller;
         this.tagsMap.clear();
         initialiseAddTagDialog();
@@ -189,7 +190,10 @@ public class AddTagDialogController implements EventListenerOwner {
 
                                 @Override
                                 protected Tag doInBackground(Tag... params) {
+                                    // TODO: sync operations do not trigger event listeners, this could be changed at some moment...
                                     params[0].createSync();
+                                    // but we can trigger an event ourselves...
+                                    EventDispatcher.getInstance().notifyListeners(new Event(Event.CRUD.TYPE, Event.CRUD.CREATED, Tag.class, null, params[0]));
                                     return params[0];
                                 }
 
