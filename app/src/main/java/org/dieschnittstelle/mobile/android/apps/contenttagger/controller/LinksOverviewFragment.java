@@ -101,9 +101,9 @@ public class LinksOverviewFragment extends Fragment implements EventGenerator, E
 
         // we create the view only once and reuse it afterwards
         if (this.contentView == null) {
-            this.contentView = inflater.inflate(R.layout.notes_overview_contentview, container, false);
+            this.contentView = inflater.inflate(R.layout.links_overview_contentview, container, false);
 
-            this.adapter = new EntityListAdapter<Link, LinksListItemViewHolder>(getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.notes_overview_itemview, R.layout.notes_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit, R.id.action_add_tag}) {
+            this.adapter = new EntityListAdapter<Link, LinksListItemViewHolder>(getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.links_overview_itemview, R.layout.links_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit, R.id.action_add_tag}) {
                 @Override
                 public LinksListItemViewHolder onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
                     return new LinksListItemViewHolder(view, adapter);

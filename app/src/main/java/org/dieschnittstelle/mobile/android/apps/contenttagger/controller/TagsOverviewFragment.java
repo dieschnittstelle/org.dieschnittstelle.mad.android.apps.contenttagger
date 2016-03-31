@@ -48,7 +48,7 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
     /*
      * the adapter for the listview
      */
-    private EntityListAdapter<Tag,ListItemViewHolderTitleSubtitle> adapter;
+    private EntityListAdapter<Tag,TagsListItemViewHolder> adapter;
 
     /*
      * the content view that is only created once and reused over pause/resume
@@ -112,16 +112,24 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
             this.contentView = inflater.inflate(R.layout.tags_overview_contentview, container, false);
 
             // create an adapter for the recycler view
-            this.adapter = new EntityListAdapter<Tag, ListItemViewHolderTitleSubtitle>(this.getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.tags_overview_itemview, R.layout.tags_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit}) {
+            this.adapter = new EntityListAdapter<Tag, TagsListItemViewHolder>(this.getActivity(), (RecyclerView) contentView.findViewById(R.id.listview), R.layout.tags_overview_itemview, R.layout.tags_overview_itemmenu, new int[]{R.id.action_delete, R.id.action_edit}) {
 
                 @Override
-                public ListItemViewHolderTitleSubtitle onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
-                    return new ListItemViewHolderTitleSubtitle(view, adapter);
+                public TagsListItemViewHolder onCreateEntityViewHolder(View view, EntityListAdapter adapter) {
+                    return new TagsListItemViewHolder(view, adapter);
                 }
 
                 @Override
-                public void onBindEntityViewHolder(ListItemViewHolderTitleSubtitle holder, Tag entity, int position) {
+                public void onBindEntityViewHolder(TagsListItemViewHolder holder, Tag entity, int position) {
                     holder.title.setText(String.format(getResources().getString(R.string.tag_lable),entity.getName()));
+                    int numOfItems = entity.getTaggedItems() != null ? entity.getTaggedItems().size() : 0;
+                    if (numOfItems == 0) {
+                        holder.numOfItems.setVisibility(View.GONE);
+                    }
+                    else {
+                        holder.numOfItems.setVisibility(View.VISIBLE);
+                    }
+                    holder.numOfItems.setText(String.valueOf(numOfItems));
                 }
 
                 @Override
@@ -151,6 +159,18 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
         }
 
         return this.contentView;
+    }
+
+    // we use an own listitem holder for representing the number of tags
+    private class TagsListItemViewHolder extends ListItemViewHolderTitleSubtitle {
+
+        public TextView numOfItems;
+
+        public TagsListItemViewHolder(View itemView, EntityListAdapter adapter) {
+            super(itemView,adapter);
+            this.numOfItems = (TextView)itemView.findViewById(R.id.numOfItems);
+        }
+
     }
 
     // we start populating the view onresume unless readall has already been run before
