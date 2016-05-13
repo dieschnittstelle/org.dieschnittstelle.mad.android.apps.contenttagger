@@ -7,6 +7,7 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
+import android.support.v7.util.SortedList;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -34,6 +35,7 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
     private Activity controller;
 
     private List<E> entities = new ArrayList<E>();
+    //private SortedList<?> entities = new SortedList(null,null);
     private int itemLayout;
     public int[] itemMenuActions;
     public int itemMenuLayout;

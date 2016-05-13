@@ -12,6 +12,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -109,7 +110,7 @@ public class LinksReadviewFragment extends Fragment implements EventGenerator, E
                 // display the title in the title bar
                 ((ActionBarActivity) getActivity()).setTitle(link.getTitle());
                 // show the content in the webview
-                webview.loadUrl(link.getUrl());
+                webview.loadUrl(link.getUrl()/*"http://141.64.76.145/ambiwise/"*/);
                 // create the tagbar controller, passing the link object
                 tagsbarController.bindTaggable(link);
             }
@@ -119,6 +120,7 @@ public class LinksReadviewFragment extends Fragment implements EventGenerator, E
 
     /*
      * see http://stackoverflow.com/questions/10097233/optimal-webview-settings-for-html5-support
+     * and: cookie settings required, e.g., for supporting adal oauth
      */
     private void prepareWebview() {
        webview.setFocusable(true);
@@ -130,6 +132,8 @@ public class LinksReadviewFragment extends Fragment implements EventGenerator, E
        webview.getSettings().setAppCacheEnabled(true);
        webview.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
        webview.setWebViewClient(new WebViewClient());
+        CookieManager.getInstance().setAcceptCookie(true);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(webview,true);
     }
 
     @Override

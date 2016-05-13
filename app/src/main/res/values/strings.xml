@@ -44,4 +44,5 @@
     <string name="hint_links_editview_url" >URL</string>
     <string name="title_read_link">Link</string>
     <string name="action_open">Open</string>
+    <string name="action_share">Share</string>
 </resources>

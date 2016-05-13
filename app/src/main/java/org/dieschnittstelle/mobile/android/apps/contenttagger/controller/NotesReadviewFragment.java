@@ -1,6 +1,7 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
 import android.app.Fragment;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -94,6 +95,14 @@ public class NotesReadviewFragment extends NotesEditviewFragment implements Even
         if (item.getItemId() == R.id.action_edit) {
             ((MainNavigationControllerActivity) getActivity()).showView(NotesEditviewFragment.class, MainNavigationControllerActivity.createArguments(NotesEditviewFragment.ARG_NOTE_ID, note.getId()), true);
             return true;
+        }
+        else if (item.getItemId() == R.id.action_share) {
+            Intent sendIntent = new Intent();
+            sendIntent.setAction(Intent.ACTION_SEND);
+            sendIntent.putExtra(Intent.EXTRA_SUBJECT,"[contenttagger] " + this.note.getTitle());
+            sendIntent.putExtra(Intent.EXTRA_TEXT, this.note.getContent() + "\n\n [sent from contenttagger@android]");
+            sendIntent.setType("text/plain");
+            startActivity(sendIntent);
         }
         return super.onOptionsItemSelected(item);
     }
