@@ -3,6 +3,8 @@ package org.dieschnittstelle.mobile.android.apps.contenttagger;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.webkit.URLUtil;
 import android.widget.Toast;
 
@@ -16,17 +18,33 @@ import org.dieschnittstelle.mobile.android.components.controller.SendActionDispa
 import org.dieschnittstelle.mobile.android.components.model.impl.EntityManager;
 import org.dieschnittstelle.mobile.android.components.model.impl.LocalEntityCRUDOperationsImpl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Created by master on 14.03.16.
  */
 // a local application class that instantiates the entity manager
 public class ContentTaggerApplication extends com.orm.SugarApp implements SendActionDispatcher {
 
+    private static final String DBFILENAME = "contenttagger.db";
     protected static String logger = "ContentTaggerApplication";
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Log.i(logger, "database path is: " + getDatabasePath("contenttagger.db"));
+
+        File file = getDatabasePath("contenttagger.db");
+        Log.i(logger,"database file exists: " + file.exists());
+
         EntityManager.getInstance().addEntityCRUDOperationsImpl(Tag.class, EntityManager.CRUDOperationsScope.LOCAL, new LocalEntityCRUDOperationsImpl());
         EntityManager.getInstance().setEntityCRUDAsync(Tag.class, true);
         EntityManager.getInstance().addEntityCRUDOperationsImpl(Note.class, EntityManager.CRUDOperationsScope.LOCAL, new LocalEntityCRUDOperationsImpl());

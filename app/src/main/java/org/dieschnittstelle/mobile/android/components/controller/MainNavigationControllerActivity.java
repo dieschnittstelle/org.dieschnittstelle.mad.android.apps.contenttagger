@@ -11,6 +11,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -26,6 +27,15 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /*
  * removed dependencies to application specific resources by using getResources().getIdentifier(), see http://stackoverflow.com/questions/3476430/how-to-get-a-resource-id-with-a-known-resource-name
@@ -148,6 +158,46 @@ public class MainNavigationControllerActivity extends ActionBarActivity implemen
         else {
             Log.d(logger, "not clear-all action provided.");
         }
+
+        /*
+         * initialise export-action if it exists
+         */
+        View exportAction = findViewById(getResources().getIdentifier("action_export_data","id",appPackage));
+        if (exportAction != null) {
+            Log.d(logger,"main view provides export action: " + exportAction);
+            exportAction.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        // try to read out the metadata for the database - assuming we use sugar orm
+                        ApplicationInfo ai = getPackageManager().getApplicationInfo(appPackage, PackageManager.GET_META_DATA);
+                        Bundle metaData = ai.metaData;
+                        if (metaData == null) {
+                            Log.i(logger, "no metadata specified in manifest for application. Cannot reset database...");
+                        } else {
+                            String databaseName = metaData.getString("DATABASE");
+                            Log.i(logger,"about to export database: " + databaseName);
+                            String dstPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator /*+ appPackage + File.separator*/;
+                            File dst = new File(dstPath);
+
+                            try {
+                                exportFile(getDatabasePath(databaseName), dst, databaseName + ".txt");
+                                Toast.makeText(MainNavigationControllerActivity.this,"Database file has been saved to external storage in directory: " + dst,Toast.LENGTH_LONG).show();
+                            } catch (IOException e) {
+                                Toast.makeText(MainNavigationControllerActivity.this,"Could not save database file to external storage! Got exception: " + e,Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    }
+                    catch (Exception e) {
+                        Log.e(logger,"got exception trying to access application metadata: " + e,e);
+                    }
+                }
+            });
+        }
+        else {
+            Log.d(logger, "not export action provided.");
+        }
+
 
         // check whether we have received a send event
 
@@ -302,5 +352,43 @@ public class MainNavigationControllerActivity extends ActionBarActivity implemen
             Toast.makeText(this,"application cannot handle send actions. Ignore action for type " + type + ": " + intent.getStringExtra(Intent.EXTRA_TEXT),Toast.LENGTH_LONG).show();
         }
     }
+
+    // this is taken over from http://stackoverflow.com/questions/31094071/copy-file-from-the-internal-to-the-external-storage-in-android
+    public File exportFile(File src, File dst, String dstname) throws IOException {
+
+        //if folder does not exist
+        if (!dst.exists()) {
+            if (!dst.mkdir()) {
+                return null;
+            }
+        }
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File expFile = new File(dst.getPath() + File.separator + "EXPORT_" + timeStamp + "_" + dstname);
+
+        Log.i(logger,"exporting database to file: " + expFile);
+
+        FileChannel inChannel = null;
+        FileChannel outChannel = null;
+
+        try {
+            inChannel = new FileInputStream(src).getChannel();
+            outChannel = new FileOutputStream(expFile).getChannel();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            inChannel.transferTo(0, inChannel.size(), outChannel);
+        } finally {
+            if (inChannel != null)
+                inChannel.close();
+            if (outChannel != null)
+                outChannel.close();
+        }
+
+        return expFile;
+    }
+
 
 }
