@@ -17,21 +17,21 @@
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link</item>
-        <item></item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media</item>
         <item></item>
     </string-array>
     <string-array name="main_menu_detailviews">
         <item></item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.NotesReadviewFragment</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.LinksReadviewFragment</item>
-        <item></item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.MediaEditviewFragment</item>
         <item></item>
     </string-array>
     <string-array name="main_menu_controllers">
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.TagsOverviewFragment</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.NotesOverviewFragment</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.LinksOverviewFragment</item>
-        <item></item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.MediaOverviewFragment</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.PlacesOverviewFragment</item>
     </string-array>
     <!-- this one specifies the initial view -->

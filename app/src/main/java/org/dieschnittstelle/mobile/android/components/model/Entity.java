@@ -237,7 +237,7 @@ public abstract class Entity {
                                 Log.d(logger,"postLoad(): entityEntityId: " + currentEntityId);
                                 try {
                                     currentEntities.add(this.readSync((Class<? extends Entity>)Class.forName(currentEntityClassname), Long.parseLong(currentEntityId)));
-                                } catch (ClassNotFoundException e) {
+                                } catch (Exception e) {
                                     Log.e(logger, "postLoad(): got exception trying to read entity given reference " + currentEntityRef + ": " + e, e);
                                 }
                             }

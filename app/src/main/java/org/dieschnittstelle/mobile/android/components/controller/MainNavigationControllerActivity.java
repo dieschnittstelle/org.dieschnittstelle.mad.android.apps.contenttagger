@@ -35,6 +35,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 /*
@@ -179,6 +180,8 @@ public class MainNavigationControllerActivity extends ActionBarActivity implemen
                             Log.i(logger,"about to export database: " + databaseName);
                             String dstPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator /*+ appPackage + File.separator*/;
                             File dst = new File(dstPath);
+
+                            Log.i(logger,"files in directory: " + Arrays.asList(dst.listFiles()));
 
                             try {
                                 exportFile(getDatabasePath(databaseName), dst, databaseName + ".txt");

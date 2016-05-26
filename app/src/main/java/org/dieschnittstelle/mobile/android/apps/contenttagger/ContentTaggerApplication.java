@@ -2,6 +2,7 @@ package org.dieschnittstelle.mobile.android.apps.contenttagger;
 
 import android.app.Fragment;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -9,7 +10,9 @@ import android.webkit.URLUtil;
 import android.widget.Toast;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.controller.LinksEditviewFragment;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.controller.MediaEditviewFragment;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
 import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
@@ -51,10 +54,14 @@ public class ContentTaggerApplication extends com.orm.SugarApp implements SendAc
         EntityManager.getInstance().setEntityCRUDAsync(Note.class, true);
         EntityManager.getInstance().addEntityCRUDOperationsImpl(Link.class, EntityManager.CRUDOperationsScope.LOCAL, new LocalEntityCRUDOperationsImpl());
         EntityManager.getInstance().setEntityCRUDAsync(Link.class, true);
+        EntityManager.getInstance().addEntityCRUDOperationsImpl(Media.class, EntityManager.CRUDOperationsScope.LOCAL, new LocalEntityCRUDOperationsImpl());
+        EntityManager.getInstance().setEntityCRUDAsync(Media.class, true);
     }
 
     @Override
     public void handleSendActionForType(String type, Intent intent,SendActionDispatcherPresenter presenter) {
+
+        Log.i(logger,"handleSendActionForType(): intent: " + intent);
 
         switch(type) {
             case "text/plain":
@@ -67,6 +74,9 @@ public class ContentTaggerApplication extends com.orm.SugarApp implements SendAc
                     Toast.makeText(this,"Content type " + type + " for send action is not supported for arbitrary texts. Got: " + text,Toast.LENGTH_LONG).show();
                 }
                 break;
+            case "image/jpeg":
+                handleSendActionForImage(intent,presenter);
+                break;
             default:
                 Toast.makeText(this,"Content type " + type + " for send action is not supported.",Toast.LENGTH_LONG).show();
                 break;
@@ -78,6 +88,22 @@ public class ContentTaggerApplication extends com.orm.SugarApp implements SendAc
         Bundle args = MainNavigationControllerActivity.createArguments(LinksEditviewFragment.ARG_LINK_URL, url);
         args.putBoolean(LinksEditviewFragment.ARG_CALLED_FROM_SEND, true);
         presenter.showView(LinksEditviewFragment.class, args, false);
+    }
+
+    private void handleSendActionForImage(Intent intent,SendActionDispatcherPresenter presenter) {
+        Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        if (imageUri != null) {
+            // Update UI to reflect image being shared
+            Log.i(logger,"received imageUri: " + imageUri);
+            Bundle args = MainNavigationControllerActivity.createArguments(MediaEditviewFragment.ARG_MEDIA_CONTENT_URI, imageUri.toString());
+            args.putBoolean(LinksEditviewFragment.ARG_CALLED_FROM_SEND, true);
+            presenter.showView(MediaEditviewFragment.class, args, false);
+        }
+        else {
+            String err = "no image uri has been received!";
+            Log.e(logger,"handleSendActionForImage(): " + err);
+            Toast.makeText(this,err,Toast.LENGTH_LONG).show();
+        }
     }
 
 }

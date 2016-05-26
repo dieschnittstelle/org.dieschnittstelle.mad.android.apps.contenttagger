@@ -46,4 +46,5 @@
     <string name="action_open">Open</string>
     <string name="action_share">Share</string>
     <string name="action_export_data">Export</string>
+    <string name="title_create_media">New Media</string>
 </resources>
