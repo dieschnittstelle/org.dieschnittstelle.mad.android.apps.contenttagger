@@ -18,9 +18,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
 import org.dieschnittstelle.mobile.android.components.controller.CustomDialogController;
 import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
@@ -158,7 +160,19 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
             createEditTagDialogController();
         }
 
+        prepareSorting();
+
         return this.contentView;
+    }
+
+    private void prepareSorting() {
+        List<Comparator<? super Tag>> c1 = new ArrayList<Comparator<? super Tag>>();
+        c1.add(Tag.COMPARE_BY_NAME);
+        List<Comparator<? super Tag>> c2 = new ArrayList<Comparator<? super Tag>>();
+        c2.add(Tag.COMPARE_BY_NAME);
+        c2.add(Tag.COMPARE_BY_NUM_OF_ITEMS);
+        adapter.addSortingStrategy(c1);
+        adapter.addSortingStrategy(c2);
     }
 
     // we use an own listitem holder for representing the number of tags
@@ -250,6 +264,9 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
         int id = item.getItemId();
         if (id == R.id.action_add) {
             this.editTagDialogController.show(new Tag());
+        }
+        else if (id == R.id.action_sort) {
+            this.adapter.sortNext();
         }
 
         return super.onOptionsItemSelected(item);

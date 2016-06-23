@@ -20,6 +20,8 @@ import android.view.Window;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.dieschnittstelle.mobile.android.components.model.Entity;
@@ -39,6 +41,12 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
     private int itemLayout;
     public int[] itemMenuActions;
     public int itemMenuLayout;
+
+    // a list of sorting strategies
+    private List<List<Comparator<? super E>>> sortingStrategies = new ArrayList<List<Comparator<? super E>>>();
+
+    // we keep the state indicating which sorting strategy we are currently using
+    private int currentSortingStrategy = -1;
 
     public View.OnTouchListener onTouchItemListener = new SimpleOnTouchListener(new SimpleOnSelectListItemListener(this));
     public View.OnTouchListener onTouchItemMenuListener = new SimpleOnTouchListener(new SimpleOnSelectListItemMenuListener(this));
@@ -157,13 +165,24 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
 
     public void addItem(E item) {
         this.entities.add(item);
-        this.notifyItemInserted(this.entities.size() - 1);
+        if (this.sortingStrategies.size() > 0) {
+            this.sort();
+        }
+        else {
+            this.notifyItemInserted(this.entities.size() - 1);
+        }
     }
 
     public void addItems(List<E> items) {
         int sizeBefore = this.entities.size();
         this.entities.addAll(items);
-        this.notifyItemRangeInserted(sizeBefore, items.size());
+        // we sort
+        if (this.sortingStrategies.size() > 0) {
+            this.sort();
+        }
+        else {
+            this.notifyItemRangeInserted(sizeBefore, items.size());
+        }
     }
 
     public void removeItem(E item) {
@@ -179,6 +198,53 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
         if (index > -1) {
             this.notifyItemChanged(index);
         }
+    }
+
+    /************************************************************
+     * sorting
+     ************************************************************/
+
+    public void addSortingStrategy(List<Comparator<? super E>> strategy) {
+        this.sortingStrategies.add(strategy);
+    }
+
+    public void sort() {
+        if (currentSortingStrategy == -1) {
+            currentSortingStrategy = 0;
+        }
+        if (sortingStrategies.size() > currentSortingStrategy) {
+            sort(sortingStrategies.get(currentSortingStrategy));
+        }
+    }
+
+    public void sortNext() {
+        if (currentSortingStrategy == -1) {
+            currentSortingStrategy = 0;
+        }
+        else if (currentSortingStrategy < (sortingStrategies.size() - 1)) {
+            currentSortingStrategy++;
+        }
+        else {
+            currentSortingStrategy = 0;
+        }
+        sort(sortingStrategies.get(currentSortingStrategy));
+    }
+
+    public void sort(List<Comparator<? super E>> comparators) {
+        Log.i(logger, "sorting entities using comparators: " + comparators);
+
+        for (Comparator<? super E> comp : comparators) {
+            Log.i(logger,"applying " + comp);
+            Collections.sort(entities, comp);
+        }
+
+        // this is a very brute-force solution as it results in recreating all list item views to be displayed
+        this.getController().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                EntityListAdapter.this.notifyDataSetChanged();
+            }
+        });
     }
 
 

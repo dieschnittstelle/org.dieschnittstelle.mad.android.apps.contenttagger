@@ -7,6 +7,7 @@ import org.dieschnittstelle.mobile.android.components.model.Entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -14,6 +15,18 @@ import java.util.List;
  */
 @Table
 public class Note extends Taggable implements Serializable {
+
+
+    // Comparators
+    public static Comparator<Note> COMPARE_BY_DATE = new Comparator<Note>() {
+        @Override
+        public int compare(Note lhs, Note rhs) {
+            Long lhsdate = lhs.lastmodified;
+            Long rhsdate = rhs.lastmodified;
+            return lhsdate.compareTo(rhsdate);
+        }
+    };
+
 
     private String title;
 

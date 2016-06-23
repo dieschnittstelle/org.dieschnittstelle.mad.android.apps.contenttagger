@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note;
 import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
 import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
@@ -26,6 +27,8 @@ import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
 import org.dieschnittstelle.mobile.android.components.model.Entity;
 import org.dieschnittstelle.mobile.android.components.view.ListItemViewHolderTitleSubtitle;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -152,8 +155,29 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
             };
         }
 
+        prepareSorting();
+
         return this.contentView;
     }
+
+    /**
+     * combination of comparators needs to be ordered by increasing priority
+     * see http://www.coderanch.com/t/601882/java/java/Multiple-comparators
+     */
+    private void prepareSorting() {
+        List<Comparator<? super Note>> c1 = new ArrayList<Comparator<? super Note>>();
+        c1.add(Note.COMPARE_BY_TITLE);
+        List<Comparator<? super Note>> c2 = new ArrayList<Comparator<? super Note>>();
+        c2.add(Note.COMPARE_BY_TITLE);
+        c2.add(Note.COMPARE_BY_DATE);
+        List<Comparator<? super Note>> c3 = new ArrayList<Comparator<? super Note>>();
+        c3.add(Note.COMPARE_BY_TITLE);
+        c3.add(Note.COMPARE_BY_NUM_OF_TAGS);
+        adapter.addSortingStrategy(c1);
+        adapter.addSortingStrategy(c2);
+        adapter.addSortingStrategy(c3);
+    }
+
 
     // we use an own listitem holder for representing the number of tags
     private class NotesListItemViewHolder extends ListItemViewHolderTitleSubtitle {
@@ -204,6 +228,10 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
 
             return true;
         }
+        else if (item.getItemId() == R.id.action_sort) {
+            this.adapter.sortNext();
+        }
+
         return false;
     }
 }

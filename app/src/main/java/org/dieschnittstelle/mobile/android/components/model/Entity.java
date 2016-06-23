@@ -13,6 +13,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,6 +23,13 @@ import java.util.StringTokenizer;
  * Created by master on 10.03.16.
  */
 public abstract class Entity {
+
+    public static Comparator<Entity> COMPARE_BY_ID = new Comparator<Entity>() {
+        @Override
+        public int compare(Entity lhs, Entity rhs) {
+            return (lhs.getId() < rhs.getId() ? -1 : (lhs.getId() == rhs.getId()) ? 0 : 1);
+        }
+    };
 
     /*
      * constants for representing entity associations as string

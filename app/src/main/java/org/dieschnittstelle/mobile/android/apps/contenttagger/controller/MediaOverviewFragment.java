@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
 import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
 import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
@@ -28,6 +29,8 @@ import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
 import org.dieschnittstelle.mobile.android.components.model.Entity;
 import org.dieschnittstelle.mobile.android.components.view.ListItemViewHolderTitleSubtitle;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -153,9 +156,25 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
                     ((TextView) holder.heading).setText(item.getTitle());
                 }
             };
+
+            prepareSorting();
         }
 
         return this.contentView;
+    }
+
+    private void prepareSorting() {
+        List<Comparator<? super Media>> c1 = new ArrayList<Comparator<? super Media>>();
+        c1.add(Media.COMPARE_BY_TITLE);
+        List<Comparator<? super Media>> c2 = new ArrayList<Comparator<? super Media>>();
+        c2.add(Media.COMPARE_BY_TITLE);
+        c2.add(Media.COMPARE_BY_DATE);
+        List<Comparator<? super Media>> c3 = new ArrayList<Comparator<? super Media>>();
+        c3.add(Media.COMPARE_BY_TITLE);
+        c3.add(Media.COMPARE_BY_NUM_OF_TAGS);
+        adapter.addSortingStrategy(c1);
+        adapter.addSortingStrategy(c2);
+        adapter.addSortingStrategy(c3);
     }
 
     // we use an own listitem holder for representing the number of tags
@@ -209,6 +228,10 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
 
             return true;
         }
+        else if (item.getItemId() == R.id.action_sort) {
+            this.adapter.sortNext();
+        }
+
         return false;
     }
 }

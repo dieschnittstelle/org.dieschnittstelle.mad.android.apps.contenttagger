@@ -26,6 +26,9 @@ import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
 import org.dieschnittstelle.mobile.android.components.model.Entity;
 import org.dieschnittstelle.mobile.android.components.view.ListItemViewHolderTitleSubtitle;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -152,7 +155,23 @@ public class LinksOverviewFragment extends Fragment implements EventGenerator, E
             };
         }
 
+        prepareSorting();
+
         return this.contentView;
+    }
+
+    private void prepareSorting() {
+        List<Comparator<? super Link>> c1 = new ArrayList<Comparator<? super Link>>();
+        c1.add(Link.COMPARE_BY_TITLE);
+        List<Comparator<? super Link>> c2 = new ArrayList<Comparator<? super Link>>();
+        c2.add(Link.COMPARE_BY_TITLE);
+        c2.add(Link.COMPARE_BY_DATE);
+        List<Comparator<? super Link>> c3 = new ArrayList<Comparator<? super Link>>();
+        c3.add(Link.COMPARE_BY_TITLE);
+        c3.add(Link.COMPARE_BY_NUM_OF_TAGS);
+        adapter.addSortingStrategy(c1);
+        adapter.addSortingStrategy(c2);
+        adapter.addSortingStrategy(c3);
     }
 
     // we use an own listitem holder for representing the number of tags
@@ -204,6 +223,10 @@ public class LinksOverviewFragment extends Fragment implements EventGenerator, E
 
             return true;
         }
+        else if (item.getItemId() == R.id.action_sort) {
+            this.adapter.sortNext();
+        }
+
         return false;
     }
 }

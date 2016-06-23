@@ -9,6 +9,7 @@ import org.dieschnittstelle.mobile.android.components.model.Entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,30 @@ import java.util.Map;
 // we mark this as an entity in the sense of sugar orm
 @Table
 public class Tag extends Entity implements Serializable {
+
+    // Comparators
+    public static Comparator<Tag> COMPARE_BY_NUM_OF_ITEMS = new Comparator<Tag>() {
+        @Override
+        public int compare(Tag lhs, Tag rhs) {
+            Integer lhstaggables = lhs.getTaggedItems().size();
+            Integer rhstaggables = rhs.getTaggedItems().size();
+
+            return (-1)*lhstaggables.compareTo(rhstaggables);
+        }
+    };
+
+    // Comparators
+    public static Comparator<Tag> COMPARE_BY_NAME = new Comparator<Tag>() {
+        @Override
+        public int compare(Tag lhs, Tag rhs) {
+            String lhstit = lhs.getName();
+            String rhstit = rhs.getName();
+            if (lhstit == null || rhstit == null) {
+                return 0;
+            }
+            return lhstit.compareTo(rhstit);
+        }
+    };
 
     protected static String logger = "Entity";
 
