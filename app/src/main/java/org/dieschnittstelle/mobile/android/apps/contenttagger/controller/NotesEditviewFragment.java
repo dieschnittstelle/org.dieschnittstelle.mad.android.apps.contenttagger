@@ -1,6 +1,10 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
+import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
+import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBarActivity;
@@ -12,15 +16,20 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Taggable;
+import org.dieschnittstelle.mobile.android.components.controller.CustomDialogController;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
 import org.dieschnittstelle.mobile.android.components.events.EventListener;
 import org.dieschnittstelle.mobile.android.components.events.EventListenerOwner;
 import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
+import org.dieschnittstelle.mobile.android.components.model.Entity;
 
 /**
  * Created by master on 17.03.16.
@@ -51,6 +60,8 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
      */
     protected boolean obsolete;
 
+    protected boolean saved;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +80,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
             @Override
             public void onEvent(Event<Note> event) {
                 if (note == event.getData()) {
+                    saved = true;
                     getFragmentManager().popBackStack();
                 }
                 else {
@@ -117,6 +129,27 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
     }
 
     @Override
+    /*
+     * onPause cannot be interrupted!!!
+     */
+    public void onPause() {
+        Log.i(logger, "onPause(): saved: " + this.saved);
+        if (!saved && !(this instanceof NotesReadviewFragment)) {
+            // for the time being, we just save
+            //confirmSaveTaggable(this.getActivity(),this.note);
+            if (this.note.created()) {
+                this.note.update();
+            }
+            else {
+                this.note.create();
+            }
+        }
+        else {
+            super.onPause();
+        }
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         EventDispatcher.getInstance().unbindController(this);
@@ -158,7 +191,8 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
                 return true;
             case R.id.action_delete:
                 if (note.created()) {
-                    note.delete();
+                    //note.delete();
+                    confirmDeleteTaggable(this.getActivity(),this.note);
                 }
                 return true;
             case R.id.action_add_tag:
@@ -171,5 +205,112 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
 
         return false;
     }
+
+    // a dialog for reconfirming deletion
+    public static void confirmDeleteTaggable(final Activity context, Taggable taggable) {
+        (new CustomDialogController<Taggable>(context, R.layout.dialog_confirm) {
+            @Override
+            protected void onBindViewHolder(boolean bound) {
+                if (!bound) {
+                    this.title.setText(R.string.title_delete_taggable);
+                    this.primaryButton.setText(R.string.action_confirm);
+                    this.secondaryButton.setText(R.string.action_cancel);
+                    this.primaryButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // create a new tag and assign it
+                            new AsyncTask<Taggable, Void, Taggable>() {
+
+                                @Override
+                                protected Taggable doInBackground(Taggable... params) {
+                                    // TODO: sync operations do not trigger event listeners, this could be changed at some moment...
+                                    if (params[0].created()) {
+                                        params[0].deleteSync();
+                                        // but we can trigger an event ourselves...
+                                        EventDispatcher.getInstance().notifyListeners(new Event(Event.CRUD.TYPE, Event.CRUD.DELETED, params[0].getClass(), null, params[0]));
+                                        return params[0];
+                                    }
+                                    else {
+                                        return null;
+                                    }
+                                }
+
+                                @Override
+                                protected void onPostExecute(Taggable taggable) {
+                                    if (taggable != null) {
+                                        Toast.makeText(context,String.format(context.getResources().getString(R.string.message_feedback_delete_taggable_ok),data.getTitle()),Toast.LENGTH_SHORT).show();
+                                    }
+                                    else {
+                                        Toast.makeText(context,String.format(context.getResources().getString(R.string.message_feedback_delete_taggable_nok),data.getTitle()),Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                            }.execute(data);
+
+                            hide();
+                        }
+                    });
+                }
+                this.message.setText(String.format(controller.getResources().getString(R.string.message_confirm_delete_taggable), (data.getTitle())));
+            }
+        }).show(taggable);
+    }
+
+    // a dialog for reconfirming deletion
+    public static void confirmSaveTaggable(final Activity context, Taggable taggable) {
+        Log.i(logger,"confirmSaveTaggable()");
+        (new CustomDialogController<Taggable>(context, R.layout.dialog_confirm) {
+            @Override
+            protected void onBindViewHolder(boolean bound) {
+                Log.i(logger,"onBindViewHolder()");
+                if (!bound) {
+                    this.title.setText(R.string.title_save_taggable
+                    );
+                    this.primaryButton.setText(R.string.action_confirm);
+                    this.secondaryButton.setText(R.string.action_cancel);
+                    this.primaryButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // create a new tag and assign it
+                            new AsyncTask<Taggable, Void, Taggable>() {
+
+                                @Override
+                                protected Taggable doInBackground(Taggable... params) {
+                                    // TODO: sync operations do not trigger event listeners, this could be changed at some moment...
+                                    if (params[0].created()) {
+                                        params[0].updateSync();
+                                        // but we can trigger an event ourselves...
+                                        EventDispatcher.getInstance().notifyListeners(new Event(Event.CRUD.TYPE, Event.CRUD.UPDATED, params[0].getClass(), null, params[0]));
+                                        return params[0];
+                                    }
+                                    else {
+                                        params[0].createSync();
+                                        // but we can trigger an event ourselves...
+                                        EventDispatcher.getInstance().notifyListeners(new Event(Event.CRUD.TYPE, Event.CRUD.CREATED, params[0].getClass(), null, params[0]));
+                                        return params[0];
+                                    }
+                                }
+
+                                @Override
+                                protected void onPostExecute(Taggable taggable) {
+                                    if (taggable != null) {
+                                        Toast.makeText(context,String.format(context.getResources().getString(R.string.message_feedback_save_taggable_ok),data.getTitle()),Toast.LENGTH_SHORT).show();
+                                    }
+                                    else {
+                                        Toast.makeText(context,String.format(context.getResources().getString(R.string.message_feedback_save_taggable_nok),data.getTitle()),Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                            }.execute(data);
+
+                            hide();
+                        }
+                    });
+                }
+                this.message.setText(String.format(controller.getResources().getString(R.string.message_confirm_delete_taggable), (data.getTitle())));
+            }
+        }).show(taggable);
+    }
+
 
 }
