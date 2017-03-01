@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_material_dark"
+    android:padding="10dp">
+
+    <!-- if we want to position elements relative to the tagsbar it seems we need to wrap it into an identifiable container -->
+    <RelativeLayout
+        android:id="@+id/tagsbar_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+        <!-- for whatever reason the edit text will not be displayed if we use include... -->
+        <!--<include layout="@layout/tagsbar" />-->
+        <org.apmem.tools.layouts.FlowLayout
+            android:id="@+id/tagsbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+        </org.apmem.tools.layouts.FlowLayout>
+    </RelativeLayout>
+
+    <EditText
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_above="@id/tagsbar_wrapper"
+        android:background="@drawable/edittext_border_darkbackground"
+        android:focusable="true"
+        android:hint="@string/hint_notes_editview_title"
+        android:textColorHint="@color/edittext_hint"
+        android:textCursorDrawable="@drawable/edittext_cursor_darkbackground" />
+
+    <!-- it would be nicer if this view could be given the complete height that is left once the other elements have been displayed -->
+    <org.osmdroid.views.MapView
+        android:id="@+id/map"
+        android:layout_above="@id/title"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+        <!--android:layout_alignParentTop="true" />-->
+
+</RelativeLayout>

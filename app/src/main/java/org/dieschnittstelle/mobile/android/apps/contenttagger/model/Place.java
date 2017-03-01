@@ -12,18 +12,7 @@ import java.util.List;
  * Created by master on 15.03.16.
  */
 @Table
-public class Media extends Taggable implements Serializable {
-
-    // Comparators
-    public static Comparator<Media> COMPARE_BY_DATE = new Comparator<Media>() {
-        @Override
-        public int compare(Media lhs, Media rhs) {
-            Long lhsdate = lhs.created;
-            Long rhsdate = rhs.created;
-            return lhsdate.compareTo(rhsdate);
-        }
-    };
-
+public class Place extends Taggable implements Serializable {
 
     private String title;
 
@@ -31,21 +20,20 @@ public class Media extends Taggable implements Serializable {
     // this attribute will be ignored when persisting / reading because it will be handled via the associations string in prePersist()/postLoad()
     private List<Tag> tags = new ArrayList<Tag>();
 
-    private long created;
-
-    private String contentUri;
-
     private Long id;
 
     private String associations;
 
-    public Media() {
+    private double geolat;
+
+    private double geolong;
+
+    public Place() {
 
     }
 
-    public Media(String title, String contentUri) {
+    public Place(String title) {
         this.title = title;
-        this.contentUri = contentUri;
     }
 
     @Override
@@ -57,6 +45,7 @@ public class Media extends Taggable implements Serializable {
     public void addTag(Tag tag) {
         if (!this.tags.contains(tag)) {
             this.tags.add(tag);
+            // we directly access the inverse attribute in order to avoid loops
             tag.getTaggedItems().add(this);
             addPendingUpdate(tag);
         }
@@ -67,6 +56,15 @@ public class Media extends Taggable implements Serializable {
         this.tags.remove(tag);
         tag.getTaggedItems().remove(this);
         addPendingUpdate(tag);
+    }
+
+    @Override
+    public void preDestroy() {
+        // before a link is removed, we need to remove it from any tags that are associated with it
+        for (Tag tag : this.tags) {
+            tag.getTaggedItems().remove(this);
+            addPendingUpdate(tag);
+        }
     }
 
     @Override
@@ -102,52 +100,40 @@ public class Media extends Taggable implements Serializable {
         this.tags = tags;
     }
 
-    public String getContentUri() {
-        return contentUri;
-    }
-
-    public void setContentUri(String contentUri) {
-        this.contentUri = contentUri;
-    }
-
-    @Override
-    public void preDestroy() {
-        // before a link is removed, we need to remove it from any tags that are associated with it
-        for (Tag tag : this.tags) {
-            tag.getTaggedItems().remove(this);
-            addPendingUpdate(tag);
-        }
-    }
-
     // update last modified on update
     public void create()  {
-        this.created = System.currentTimeMillis();
         super.create();
-    }
-
-    public long getCreated() {
-        return this.created;
-    }
-
-    public void setCreated(long created) {
-        this.created = created;
     }
 
     @Override
     public String toString() {
-        return "Media{" +
+        return "Place{" +
                 "title='" + title + '\'' +
-                ", contentUri='" + contentUri + '\'' +
-                ", created=" + created +
                 ", id=" + id +
-                ", tags=" + tags +
+                ", geolat=" + geolat +
+                ", geolong=" + geolong +
                 '}';
     }
 
-    public void update()  {
-        this.created = System.currentTimeMillis();
-        super.update();
+    public double getGeolat() {
+        return geolat;
     }
 
+    public void setGeolat(double geolat) {
+        this.geolat = geolat;
+    }
+
+    public double getGeolong() {
+        return geolong;
+    }
+
+    public void setGeolong(double geolong) {
+        this.geolong = geolong;
+    }
+
+
+    public void update()  {
+        super.update();
+    }
 
 }

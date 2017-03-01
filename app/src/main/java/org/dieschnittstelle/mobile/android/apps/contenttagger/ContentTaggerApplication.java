@@ -14,6 +14,7 @@ import org.dieschnittstelle.mobile.android.apps.contenttagger.controller.MediaEd
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Place;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
 import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.controller.SendActionDispatcher;
@@ -39,9 +40,12 @@ public class ContentTaggerApplication extends com.orm.SugarApp implements SendAc
     private static final String DBFILENAME = "contenttagger.db";
     protected static String logger = "ContentTaggerApplication";
 
+//    private GoogleApiClient client;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.w(logger, "in case application launch fails with a no-such-table error, deinstall and deactivate 'instant run' option");
 
         Log.i(logger, "database path is: " + getDatabasePath("contenttagger.db"));
 
@@ -56,6 +60,19 @@ public class ContentTaggerApplication extends com.orm.SugarApp implements SendAc
         EntityManager.getInstance().setEntityCRUDAsync(Link.class, true);
         EntityManager.getInstance().addEntityCRUDOperationsImpl(Media.class, EntityManager.CRUDOperationsScope.LOCAL, new LocalEntityCRUDOperationsImpl());
         EntityManager.getInstance().setEntityCRUDAsync(Media.class, true);
+        EntityManager.getInstance().addEntityCRUDOperationsImpl(Place.class, EntityManager.CRUDOperationsScope.LOCAL, new LocalEntityCRUDOperationsImpl());
+        EntityManager.getInstance().setEntityCRUDAsync(Place.class, true);
+
+        // TODO: skip this for the time being
+        // we deal with accessing location here, rather than inside of the particular activities
+        // Create an instance of GoogleAPIClient.
+//        if (mGoogleApiClient == null) {
+//            mGoogleApiClient = new GoogleApiClient.Builder(this)
+//                    .addConnectionCallbacks(this)
+//                    .addOnConnectionFailedListener(this)
+//                    .addApi(LocationServices.API)
+//                    .build();
+//        }
     }
 
     @Override

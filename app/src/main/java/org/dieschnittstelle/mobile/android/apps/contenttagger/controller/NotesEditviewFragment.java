@@ -33,6 +33,8 @@ import org.dieschnittstelle.mobile.android.components.model.Entity;
 
 /**
  * Created by master on 17.03.16.
+ *
+ * use slidinguppanel: https://www.numetriclabz.com/implementation-of-sliding-up-panel-using-androidslidinguppanel-in-android-tutorial
  */
 public class NotesEditviewFragment extends Fragment implements EventGenerator, EventListenerOwner {
 

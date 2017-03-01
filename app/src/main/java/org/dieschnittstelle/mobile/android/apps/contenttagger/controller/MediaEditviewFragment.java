@@ -1,8 +1,13 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
+import android.app.Activity;
 import android.app.Fragment;
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,9 +20,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
-import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
-import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
@@ -36,6 +39,8 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
      * we expect that the id of the item to be displayed is passed to us, rather than the item itself...
      */
     public static final String ARG_MEDIA_ID = TaggableOverviewFragment.OUTARG_SELECTED_ITEM_ID;
+
+    public static final int REQUEST_PICK_IMAGE = 1;
 
     /*
      * check whether we have a linkUrl, which is the case if we are called for some send actiokn
@@ -105,7 +110,9 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
             public void onEvent(Event<Media> event) {
                 media = event.getData();
                 title.setText(media.getTitle());
-                mediaContent.setImageURI(Uri.parse(media.getContentUri()));
+                if (media.getContentUri() != null) {
+                    mediaContent.setImageURI(Uri.parse(media.getContentUri()));
+                }
                 tagsbarController.bindTaggable(media);
             }
         });
@@ -130,11 +137,11 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
                 ((ActionBarActivity) getActivity()).setTitle(R.string.title_edit_link);
                 // read all notes - reaction will be dealt with by event handler
                 Media.read(Media.class, mediaId, this);
-            } else {
-                Log.d(logger,"onResume(): no mediaId has been passed. Create new link.");
+            } else if (this.media == null) {
+                Log.d(logger,"onResume(): no mediaId has been passed. Create new media element.");
                 ((ActionBarActivity) getActivity()).setTitle(R.string.title_create_media);
                 media = new Media();
-                // check whether we have been passed a url, in which case we set it on the link
+                // check whether we have been passed a url
                 if (getArguments().containsKey(ARG_MEDIA_CONTENT_URI)) {
                     Log.d(logger, "onResume(): mediaContentUri has been sent. Set it...");
                     media.setContentUri(getArguments().getString(ARG_MEDIA_CONTENT_URI));
@@ -194,13 +201,12 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
                     media.delete();
                 }
                 return true;
-            case R.id.action_open:
-//                if (URLUtil.isValidUrl(url.getText().toString())) {
-//                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url.getText().toString())));
-//                }
-//                else {
-//                    Toast.makeText(this.getActivity(),"Cannot open content. The URL is not valid.",Toast.LENGTH_LONG).show();
-//                }
+            case R.id.action_pick:
+                // use the storage access framework for obtaining permanent links to content - seems this cannot be applied to share-actions initiated on the content items themselves
+                Intent openIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                openIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                openIntent.setType("image/*");
+                startActivityForResult(openIntent, REQUEST_PICK_IMAGE);
                 break;
             case R.id.action_add_tag:
                 AddTagDialogController.getInstance().show(media);
@@ -210,4 +216,20 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
         return false;
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_PICK_IMAGE && resultCode == Activity.RESULT_OK && null != data) {
+            Uri selectedImage = data.getData();
+//            String[] filePathColumn = { MediaStore.Images.Media.DATA };
+//            Cursor cursor = getActivity().getContentResolver().query(Uri.parse(selectedImage.toString()),filePathColumn, null, null, null);
+//            cursor.moveToFirst();
+//            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+//            String picturePath = cursor.getString(columnIndex);
+//            cursor.close();
+            this.media.setContentUri(selectedImage.toString());
+            Log.i(logger,"setting image uri: " + selectedImage.toString());
+            this.mediaContent.setImageURI(selectedImage);
+        }
+    }
 }

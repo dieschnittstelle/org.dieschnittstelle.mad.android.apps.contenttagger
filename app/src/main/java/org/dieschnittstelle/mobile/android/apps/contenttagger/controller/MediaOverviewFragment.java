@@ -119,7 +119,9 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
                     Log.d(logger,"onBindEntityViewHolder(): id is: " + entity.getId());
                     holder.title.setText(entity.getTitle());
                     holder.subtitle.setText(String.valueOf(entity.getCreated()));
-                    holder.mediaContent.setImageURI(Uri.parse(entity.getContentUri()));
+                    if (entity.getContentUri() != null) {
+                        holder.mediaContent.setImageURI(Uri.parse(entity.getContentUri()));
+                    }
                     int numOfTags = entity.getTags() != null ? entity.getTags().size() : 0;
                     if (numOfTags == 0) {
                         holder.numOfTags.setVisibility(View.GONE);
