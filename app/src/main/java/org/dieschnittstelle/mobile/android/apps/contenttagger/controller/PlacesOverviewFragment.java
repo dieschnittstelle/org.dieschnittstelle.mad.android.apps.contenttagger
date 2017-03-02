@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Place;
+import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
 import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
@@ -35,12 +36,15 @@ import java.util.List;
 /**
  * Created by master on 14.03.16.
  */
-public class PlacesOverviewFragment extends Fragment implements EventGenerator, EventListenerOwner {
+public class PlacesOverviewFragment extends Fragment implements EventGenerator, EventListenerOwner, MainNavigationControllerActivity.OnBackListener {
 
     protected static String logger = "PlacesOverviewFragment";
 
     private MapView map;
     private IMapController mapController;
+
+    // we introduce different modes
+    private static enum Mode { FOCUS, EDIT, OVERVIEW};
 
     // the overlay to which the items will be added
     private ItemizedOverlayWithFocus<OverlayItem> overlay;
@@ -53,6 +57,8 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
 
     // seems we need to track subsequent tracks on an overlay item as the overlay does not distinguish between tap to focus and tap after being focused
     private Place focusedPlace;
+
+    private Mode mode = Mode.OVERVIEW;
 
     // we extend the OverlayItem class in order to keep the model data and the overlay view together
     public static class PlaceOverlayItem extends OverlayItem {
@@ -77,25 +83,6 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // we register an event listener that will display the places on the map
-        EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.READALL, Place.class), true, new EventListener<List<Place>>() {
-            @Override
-            public void onEvent(Event<List<Place>> event) {
-                places = event.getData();
-                Log.i(logger, "read places: " + places);
-                showPlacesOnMap(places);
-            }
-        });
-
-        // if a new item is created we will add it to the map
-        EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.CREATED, Place.class), true, new EventListener<Place>() {
-            @Override
-            public void onEvent(Event<Place> event) {
-                Log.i(logger, "will add new place to map: " + event.getData());
-                places.add(event.getData());
-            }
-        });
-
     }
 
     protected OverlayItem findItemForPlace(Place place) {
@@ -132,7 +119,40 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
 
         setHasOptionsMenu(true);
 
+        // there will be problems if listeners are set in onCreate() and fragments are reinitialised (e.g. on hiding the app and restarting it)
+
+        // we register an event listener that will display the places on the map
+        EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.READALL, Place.class), true, new EventListener<List<Place>>() {
+            @Override
+            public void onEvent(Event<List<Place>> event) {
+                places = event.getData();
+                Log.i(logger, "read places: " + places);
+                showPlacesOnMap(places);
+            }
+        });
+
+        // if a new item is created we will add it to the map
+        EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.CREATED, Place.class), true, new EventListener<Place>() {
+            @Override
+            public void onEvent(Event<Place> event) {
+                Log.i(logger, "will add new place to map: " + event.getData());
+                places.add(event.getData());
+            }
+        });
+
+
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        LifecycleHandling.onPause(this);
     }
 
     @Override
@@ -161,7 +181,9 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
                 if (((PlaceOverlayItem)item).getPlace() == focusedPlace) {
                     Log.d(logger,"onSingleTapUp(): focused place was tapped: " + focusedPlace);
                     // show the editview (focusedPlace will be re-set onresume)
-                    ((MainNavigationControllerActivity) getActivity()).showView(PlacesEditviewFragment.class, MainNavigationControllerActivity.createArguments(PlacesEditviewFragment.ARG_PLACE_ID, focusedPlace.getId()), true);
+//                    ((MainNavigationControllerActivity) getActivity()).showView(PlacesEditviewFragment.class, MainNavigationControllerActivity.createArguments(PlacesEditviewFragment.ARG_PLACE_ID, focusedPlace.getId()), true);
+                    mode = Mode.FOCUS;
+                    updateView(focusedPlace);
                 }
                 else {
                     focusedPlace = ((PlaceOverlayItem)item).getPlace();
@@ -182,6 +204,8 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
         this.overlay.setFocusItemsOnTap(true);
 
         this.map.getOverlays().add(this.overlay);
+
+        Log.d(logger,"onResume(): " + this + ": activity is: " + this.getActivity());
 
         // we read out all places unless the places have already been read
         if (this.places == null) {
@@ -206,5 +230,37 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
 
         return false;
     }
+
+    private void updateView() {
+        updateView(null);
+    }
+
+    private void updateView(Place place) {
+        if (place != null) {
+            this.mapController.setCenter(new GeoPoint(place.getGeolat(), place.getGeolong()));
+        }
+        this.mapController.setZoom(getZoomForMode());
+    }
+
+    private int getZoomForMode() {
+        switch (this.mode) {
+            case FOCUS: return 17;
+            case OVERVIEW: return 12;
+            default: return 14;
+        }
+    }
+
+    @Override
+    public boolean onBackPressed() {
+        if (this.mode == Mode.FOCUS) {
+            this.overlay.unSetFocusedItem();
+            this.focusedPlace = null;
+            this.mode = Mode.OVERVIEW;
+            updateView();
+            return true;
+        }
+        return false;
+    }
+
 
 }

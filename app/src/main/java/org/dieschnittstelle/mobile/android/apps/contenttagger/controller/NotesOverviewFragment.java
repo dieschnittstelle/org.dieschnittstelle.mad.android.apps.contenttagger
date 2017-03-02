@@ -17,6 +17,7 @@ import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note;
 import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
+import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
 import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
@@ -198,6 +199,7 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
     @Override
     public void onResume() {
         super.onResume();
+        LifecycleHandling.onResume(this);
         // set the title
         ((ActionBarActivity)getActivity()).setTitle(R.string.menuitem_notes);
         // read all notes - updates will be dealt with by event listeners
@@ -213,7 +215,13 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
     public void onDestroy() {
         super.onDestroy();
         // we remove the fragment as event listener
-        eventDispatcher.unbindController(this);
+        LifecycleHandling.onDestroy(this);
+    }
+
+    public void onPause() {
+        super.onPause();
+        // we remove the fragment as event listener
+        LifecycleHandling.onPause(this);
     }
 
     @Override

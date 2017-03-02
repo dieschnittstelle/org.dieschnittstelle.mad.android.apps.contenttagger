@@ -26,6 +26,7 @@ import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
 import org.dieschnittstelle.mobile.android.components.controller.CustomDialogController;
 import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
+import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
 import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
@@ -205,7 +206,7 @@ public class TagsOverviewFragment extends Fragment implements EventGenerator, Ev
     public void onDestroy() {
         super.onDestroy();
         // we remove the fragment as event listener
-        eventDispatcher.unbindController(this);
+        LifecycleHandling.onDestroy(this);
     }
 
     public void onDetach() {

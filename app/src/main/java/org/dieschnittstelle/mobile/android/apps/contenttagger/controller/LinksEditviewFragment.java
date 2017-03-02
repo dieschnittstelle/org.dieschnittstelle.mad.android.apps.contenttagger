@@ -19,6 +19,7 @@ import android.widget.Toast;
 import org.apache.http.client.utils.URIUtils;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link;
+import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
 import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
@@ -155,7 +156,7 @@ public class LinksEditviewFragment extends Fragment implements EventGenerator, E
     @Override
     public void onDestroy() {
         super.onDestroy();
-        EventDispatcher.getInstance().unbindController(this);
+        LifecycleHandling.onDestroy(this);
     }
 
     @Override

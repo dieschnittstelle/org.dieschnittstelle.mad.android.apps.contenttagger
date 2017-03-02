@@ -21,6 +21,7 @@ import android.widget.ImageView;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
+import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
@@ -160,7 +161,7 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
     @Override
     public void onDestroy() {
         super.onDestroy();
-        EventDispatcher.getInstance().unbindController(this);
+        LifecycleHandling.onDestroy(this);
     }
 
     @Override

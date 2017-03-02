@@ -313,11 +313,30 @@ public class MainNavigationControllerActivity extends ActionBarActivity implemen
     }
 
     /*
-     * we need to override onBackPressed and pop from the fragment manager
+     * we need to override onBackPressed and pop from the fragment manager and introduce an interface that allows fragments to handle back for doing some internal changes
      */
+    public static interface OnBackListener {
+
+        /*
+         * return true if event has been consumed entirely by the fragment and false otherwise
+         */
+        public boolean onBackPressed();
+
+    }
+
     @Override
     public void onBackPressed() {
         hideKeyboard(this);
+        // check whether the current main fragment handles back
+        Fragment currentFragment = getFragmentManager().findFragmentById(getResources().getIdentifier("main_contentview","id",appPackage));
+        if (currentFragment instanceof OnBackListener) {
+            boolean eventConsumed = ((OnBackListener)currentFragment).onBackPressed();
+            if (eventConsumed) {
+                Log.i(logger,"back event has already been consumed by current main fragment. Will not apply default processing.");
+                return;
+            }
+        }
+
         if (getFragmentManager().getBackStackEntryCount() > 0) {
             getFragmentManager().popBackStack();
         }

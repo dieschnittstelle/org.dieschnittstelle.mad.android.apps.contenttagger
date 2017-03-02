@@ -23,6 +23,7 @@ import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Taggable;
 import org.dieschnittstelle.mobile.android.components.controller.CustomDialogController;
+import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
@@ -132,29 +133,42 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
 
     @Override
     /*
-     * onPause cannot be interrupted!!!
+     * onPause cannot be interrupted, but at least we can perform a create/update *after* unbinding the listeners
      */
     public void onPause() {
+        super.onPause();
+
         Log.i(logger, "onPause(): saved: " + this.saved);
-        if (!saved && !(this instanceof NotesReadviewFragment)) {
-            // for the time being, we just save
-            //confirmSaveTaggable(this.getActivity(),this.note);
-            if (this.note.created()) {
-                this.note.update();
-            }
-            else {
-                this.note.create();
+        if (!(this instanceof NotesReadviewFragment)) {
+            // unbinding will prevent errors due to event handlers provoking a termination of this fragment themselves
+            EventDispatcher.getInstance().unbindController(this);
+            if (!saved) {
+                // set saved manually as the event handlers will not react
+                saved = true;
+                createOrUpdateNote();
             }
         }
+    }
+
+    private void createOrUpdateNote() {
+        // this is duplicated from above
+        note.setTitle(this.title.getText().toString());
+        note.setContent(this.content.getText().toString());
+
+        if (this.note.created()) {
+            Log.i(logger,"onPause(): updating note");
+            this.note.update();
+        }
         else {
-            super.onPause();
+            Log.i(logger,"onPause(): creating note");
+            this.note.create();
         }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        EventDispatcher.getInstance().unbindController(this);
+        LifecycleHandling.onDestroy(this);
     }
 
     @Override
@@ -182,14 +196,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
         switch (item.getItemId()) {
             case R.id.action_save:
                 // bind the data from the input form to the item
-                note.setTitle(this.title.getText().toString());
-                note.setContent(this.content.getText().toString());
-                if (note.created()) {
-                    note.update();
-                }
-                else {
-                    note.create();
-                }
+                createOrUpdateNote();
                 return true;
             case R.id.action_delete:
                 if (note.created()) {
