@@ -40,6 +40,9 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
 
     protected static String logger = "PlacesOverviewFragment";
 
+    // some default location
+    public static final GeoPoint DEFAULT_LOCATION = new GeoPoint(52.545377, 13.351655);
+
     private MapView map;
     private IMapController mapController;
 
@@ -47,8 +50,6 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
     private static enum Mode {
         FOCUS, OVERVIEW
     }
-
-    ;
 
     // the overlay to which the items will be added
     private ItemizedOverlayWithFocus<OverlayItem> overlay;
@@ -86,6 +87,7 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.i(logger,"onCreate()");
         super.onCreate(savedInstanceState);
     }
 
@@ -183,12 +185,14 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
 
     @Override
     public void onPause() {
+        Log.i(logger,"onPause()");
         super.onPause();
         LifecycleHandling.onPause(this);
     }
 
     @Override
     public void onDestroy() {
+        Log.i(logger,"onDestroy()");
         super.onDestroy();
         LifecycleHandling.onDestroy(this);
     }
@@ -197,8 +201,6 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
     public void onResume() {
         Log.i(logger, "onResume()");
         super.onResume();
-
-        Log.i(logger, "onResume(): first call");
 
         // reset the focused place
         this.focusedPlace = null;
@@ -211,8 +213,7 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
         // on appearing we will focus the map
         this.mapController = map.getController();
         mapController.setZoom(12);
-        GeoPoint startPoint = new GeoPoint(52.545377, 13.351655);
-        mapController.setCenter(startPoint);
+        mapController.setCenter(DEFAULT_LOCATION);
 
         // create the overlay for displaying places - seems we cannot factor this out to onCreate() to do it only once and keep the overlay
         // it seems that the overlay needs to be recreated...
@@ -226,7 +227,8 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
                         if (mode == Mode.FOCUS) {
                             // show the editview (focusedPlace will be re-set onresume)
                             Bundle args = MainNavigationControllerActivity.createArguments(PlacesEditviewFragment.ARG_PLACE_ID, focusedPlace.getId());
-                            args.putSerializable(PlacesEditviewFragment.ARG_MODE, PlacesEditviewFragment.Mode.READ);
+                            // this is the default mode anyway
+//                            args.putSerializable(PlacesEditviewFragment.ARG_MODE, PlacesEditviewFragment.Mode.READ);
                             ((MainNavigationControllerActivity) getActivity()).showView(PlacesEditviewFragment.class, args, true);
                         } else {
                             mode = Mode.FOCUS;

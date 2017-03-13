@@ -18,6 +18,7 @@
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media</item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.model.Place</item>
         <item></item>
     </string-array>
     <string-array name="main_menu_detailviews">
@@ -25,6 +26,7 @@
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.NotesReadviewFragment</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.LinksReadviewFragment</item>
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.MediaEditviewFragment</item>
+        <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.PlacesEditviewFragment</item>
         <item></item>
     </string-array>
     <string-array name="main_menu_controllers">

@@ -97,6 +97,8 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
             @Override
             public void onEvent(Event<Note> event) {
                 note = event.getData();
+                Log.i(logger,"onEvent(): read(): " + note);
+                ((ActionBarActivity) getActivity()).setTitle(note.getTitle());
                 title.setText(note.getTitle());
                 content.setText(note.getContent());
                 tagsbarController.bindTaggable(note);
@@ -117,7 +119,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
             // we read out the id from the arguments
             long noteId = getArguments().getLong(ARG_NOTE_ID);
             if (noteId > -1) {
-                ((ActionBarActivity) getActivity()).setTitle(R.string.title_edit_note);
+//                ((ActionBarActivity) getActivity()).setTitle(R.string.title_edit_note);
                 // read all notes - reaction will be dealt with by event handler
                 Note.read(Note.class, noteId, this);
             } else {
@@ -138,6 +140,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
      */
     public void onPause() {
         super.onPause();
+        LifecycleHandling.onPause(this);
 
         Log.i(logger, "onPause(): saved: " + this.saved);
         if (!(this instanceof NotesReadviewFragment)) {

@@ -72,6 +72,7 @@ public class NotesReadviewFragment extends NotesEditviewFragment implements Even
             @Override
             public void onEvent(Event<Note> event) {
                 note = event.getData();
+                ((ActionBarActivity) getActivity()).setTitle(note.getTitle());
                 title.setText(note.getTitle());
                 content.setText(note.getContent());
                 // we create the tagbar controller new on update
@@ -84,7 +85,7 @@ public class NotesReadviewFragment extends NotesEditviewFragment implements Even
     @Override
     public void onResume() {
         super.onResume();
-        ((ActionBarActivity)getActivity()).setTitle(R.string.title_read_note);
+//        ((ActionBarActivity)getActivity()).setTitle(R.string.title_read_note);
         // TODO: obsoletion could be dealt with at framework level within LifecycleHandling.onResume()
         if (obsolete) {
             Log.i(logger,"view is obsolete. Pop from backstack...");

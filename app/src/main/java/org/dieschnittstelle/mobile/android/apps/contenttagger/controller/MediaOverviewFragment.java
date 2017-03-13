@@ -74,6 +74,7 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
         eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.UPDATED, Media.class), false, new EventListener<Media>() {
             @Override
             public void onEvent(Event<Media> event) {
+                Log.i(logger,"onEvent(): updated: " + event.getData());
                 adapter.updateItem(event.getData());
             }
         });
@@ -211,12 +212,18 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
         // we instantiate the reusable wrapper for the add tag dialogs and specify that on adding tags update shall be executed
         // as the component is resuable, this must be called for each onResume as settings might have been changed in the meantime
         AddTagDialogController.getInstance().attach(getActivity(), true);
+        LifecycleHandling.onResume(this);
     }
 
     public void onDestroy() {
         super.onDestroy();
         // we remove the fragment as event listener
         LifecycleHandling.onDestroy(this);
+    }
+
+    public void onPause() {
+        super.onPause();
+        LifecycleHandling.onPause(this);
     }
 
     @Override

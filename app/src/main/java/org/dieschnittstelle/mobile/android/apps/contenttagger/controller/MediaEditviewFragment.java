@@ -110,6 +110,7 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
             @Override
             public void onEvent(Event<Media> event) {
                 media = event.getData();
+                ((ActionBarActivity) getActivity()).setTitle(media.getTitle());
                 title.setText(media.getTitle());
                 if (media.getContentUri() != null) {
                     mediaContent.setImageURI(Uri.parse(media.getContentUri()));
@@ -135,7 +136,6 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
             }
             if (mediaId > -1) {
                 Log.d(logger,"onResume(): we have been passed a non empty mediaId: " + mediaId);
-                ((ActionBarActivity) getActivity()).setTitle(R.string.title_edit_link);
                 // read all notes - reaction will be dealt with by event handler
                 Media.read(Media.class, mediaId, this);
             } else if (this.media == null) {

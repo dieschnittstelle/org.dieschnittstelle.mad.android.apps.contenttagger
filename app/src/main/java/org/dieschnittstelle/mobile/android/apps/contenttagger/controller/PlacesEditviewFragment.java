@@ -37,7 +37,7 @@ import java.util.ArrayList;
 
 /**
  * Created by master on 28.02.17.
- *
+ * <p>
  * for usage of the osmdroid library see https://github.com/osmdroid/osmdroid/wiki/How-to-use-the-osmdroid-library
  */
 public class PlacesEditviewFragment extends Fragment implements EventGenerator, EventListenerOwner {
@@ -48,7 +48,11 @@ public class PlacesEditviewFragment extends Fragment implements EventGenerator, 
 
     // we always allow editing here, as the mere READ of places will be done via the map overview
     // BUT: how to give access to tags from that level?
-    public enum Mode {READ, EDIT, CREATE};
+    public enum Mode {
+        READ, EDIT, CREATE
+    }
+
+    ;
 
     /*
     * we expect that the id of the item to be displayed is passed to us, rather than the item itself...
@@ -56,7 +60,7 @@ public class PlacesEditviewFragment extends Fragment implements EventGenerator, 
     public static final String ARG_PLACE_ID = TaggableOverviewFragment.OUTARG_SELECTED_ITEM_ID;
     public static final String ARG_MODE = "mode";
 
-    private Mode mode = Mode.EDIT;
+    private Mode mode = Mode.READ;
 
     // these are osmdroid constructs
     private MapView map;
@@ -72,6 +76,7 @@ public class PlacesEditviewFragment extends Fragment implements EventGenerator, 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.i(logger, "onCreate()");
         super.onCreate(savedInstanceState);
 
         // once we read a place (to be edited) we will update the map
@@ -79,27 +84,22 @@ public class PlacesEditviewFragment extends Fragment implements EventGenerator, 
             @Override
             public void onEvent(Event<Place> event) {
                 place = event.getData();
-                title.setText(place.getTitle());
-                tagsbarController.bindTaggable(place);
-
-                updatePlaceDisplay(place);
+                bindModelToView();
             }
         });
 
         // on edits/creation we return to the previous view
-        EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.OR(Event.CRUD.DELETED,Event.CRUD.UPDATED,Event.CRUD.CREATED), Place.class), false, new EventListener<Place>() {
+        EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.OR(Event.CRUD.DELETED, Event.CRUD.UPDATED, Event.CRUD.CREATED), Place.class), false, new EventListener<Place>() {
             @Override
             public void onEvent(Event<Place> event) {
                 if (place == event.getData()) {
                     FragmentManager mng = getFragmentManager();
                     if (mng != null) {
                         getFragmentManager().popBackStack();
+                    } else {
+                        Log.w(logger, "onEvent(): the fragment manager is null. I am: " + PlacesEditviewFragment.this);
                     }
-                    else {
-                        Log.w(logger,"onEvent(): the fragment manager is null. I am: " + PlacesEditviewFragment.this);
-                    }
-                }
-                else {
+                } else {
                     Log.i(logger, "onEvent(): got " + event.getType() + " event for link, but it involves a different object than the one being edited: " + event.getData() + ". Ignore...");
                 }
             }
@@ -112,14 +112,15 @@ public class PlacesEditviewFragment extends Fragment implements EventGenerator, 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View contentView = inflater.inflate(R.layout.places_editview,container,false);
+        Log.i(logger, "onCreateView()");
+        View contentView = inflater.inflate(R.layout.places_editview, container, false);
 
-        this.title = (EditText)contentView.findViewById(R.id.title);
-        Log.i(logger,"got title: " + title);
+        this.title = (EditText) contentView.findViewById(R.id.title);
+        Log.i(logger, "got title: " + title);
 
-        this.tagsbarController = new TagsbarController(this,(ViewGroup)contentView.findViewById(R.id.tagsbar),R.layout.tagsbar_itemview);
+        this.tagsbarController = new TagsbarController(this, (ViewGroup) contentView.findViewById(R.id.tagsbar), R.layout.tagsbar_itemview);
 
-        this.map = (MapView)contentView.findViewById(R.id.map);
+        this.map = (MapView) contentView.findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
 
         map.setBuiltInZoomControls(true);
@@ -129,52 +130,29 @@ public class PlacesEditviewFragment extends Fragment implements EventGenerator, 
         // we read out the id from the arguments
         long placeId = getArguments().getLong(ARG_PLACE_ID);
         if (placeId > -1) {
-            Mode argsMode = (Mode)getArguments().getSerializable(ARG_MODE);
-            Log.i(logger,"got mode from arguments: " + argsMode);
+            Mode argsMode = (Mode) getArguments().getSerializable(ARG_MODE);
+            Log.i(logger, "got mode from arguments: " + argsMode);
             if (argsMode != null) {
                 this.mode = argsMode;
             }
-            else {
-                this.mode = Mode.EDIT;
-            }
-            ((ActionBarActivity) getActivity()).setTitle(R.string.title_edit_place);
             // we read the place
-            Log.i(logger,"editing: " + placeId);
-            Place.read(Place.class,placeId);
-        }
-        else {
-            ((ActionBarActivity) getActivity()).setTitle(R.string.title_create_place);
+            Log.i(logger, "editing: " + placeId);
+            Place.read(Place.class, placeId);
+        } else {
             this.mode = Mode.CREATE;
-        }
-
-        // disable elements on edit
-        if (this.mode == Mode.READ) {
-            this.title.setEnabled(false);
         }
 
         return contentView;
     }
 
 
-    protected void updatePlaceDisplay(Place place) {
-        Log.i(logger,"updatePlaceDisplay() lat/long: " + place.getGeolat() + "/" + place.getGeolong());
-
-
-        GeoPoint gp = PlacesOverviewFragment.getGeopointFromPlace(place);
-        mapController.setZoom(ZOOM);
-        mapController.setCenter(gp);
-
-        // we remove all icons and add a new icon
-        iconsOverlay.removeAllItems();
-        iconsOverlay.addItem(new OverlayItem("","",gp));
-    }
-
     @Override
     public void onResume() {
+        Log.i(logger, "onResume()");
         super.onResume();
         // this should normally always return true as this view is a navigation terminal
         if (LifecycleHandling.onResume(this)) {
-            Log.i(logger,"onResume(): first call");
+            Log.i(logger, "onResume(): first call");
 
             // on appearing we will focus the map either on some default location (which could be the current location) or on the location of the Place item
             this.mapController = this.map.getController();
@@ -183,29 +161,32 @@ public class PlacesEditviewFragment extends Fragment implements EventGenerator, 
             this.iconsOverlay = new ItemizedIconOverlay<OverlayItem>(new ArrayList<OverlayItem>(), new DummyOnGestureListener(), getActivity());
             this.map.getOverlays().add(iconsOverlay);
 
-                // ... and another one for receiving map events
+            // ... and another one for receiving map events
             // the following classes encapsulate handling of tap/click events on the map, see https://github.com/osmdroid/osmdroid/issues/295
-                MapEventsReceiver mReceive = new MapEventsReceiver() {
-                    @Override
-                    public boolean singleTapConfirmedHelper(GeoPoint p) {
-                        Log.d(logger, "setting coordinates from GeoPoint on Place entity: " + p);
+            MapEventsReceiver mReceive = new MapEventsReceiver() {
+                @Override
+                public boolean singleTapConfirmedHelper(GeoPoint p) {
+                    Log.d(logger, "setting coordinates from GeoPoint on Place entity: " + p);
 
+                    // we only react to this event if we are not in read mode
+                    if (mode != Mode.READ) {
                         place.setGeolat(p.getLatitude());
                         place.setGeolong(p.getLongitude());
 
                         updatePlaceDisplay(place);
-
-                        return false;
                     }
 
-                    @Override
-                    public boolean longPressHelper(GeoPoint p) {
-                        return false;
-                    }
-                };
+                    return false;
+                }
 
-                MapEventsOverlay overlay = new MapEventsOverlay(mReceive);
-                map.getOverlays().add(overlay);
+                @Override
+                public boolean longPressHelper(GeoPoint p) {
+                    return false;
+                }
+            };
+
+            MapEventsOverlay overlay = new MapEventsOverlay(mReceive);
+            map.getOverlays().add(overlay);
 
             // read the mode from the arguments
             if (this.mode == Mode.EDIT || this.mode == Mode.READ) {
@@ -214,26 +195,59 @@ public class PlacesEditviewFragment extends Fragment implements EventGenerator, 
                 Place.read(Place.class, placeId, this);
             } else {
                 place = new Place();
-                // this is required in order for the tagbar to be available for new notes
-                tagsbarController.bindTaggable(place);
-                place.setGeolat(52.545377);
-                place.setGeolong(13.351655);
-                updatePlaceDisplay(place);
+                place.setGeolong(PlacesOverviewFragment.DEFAULT_LOCATION.getLongitude());
+                place.setGeolat(PlacesOverviewFragment.DEFAULT_LOCATION.getLatitude());
+                bindModelToView();
             }
 
             AddTagDialogController.getInstance().attach(getActivity());
-        }
-        else {
-            Log.i(logger,"onResume(): repeated call");
+        } else {
+            Log.i(logger, "onResume(): repeated call");
         }
     }
+
+    // here, we centralise all view filling logics that might need to be applied more than once in case the mode is switched
+    public void bindModelToView() {
+        title.setText(place.getTitle());
+        if (mode == Mode.READ) {
+            tagsbarController.setRemoveActive(false);
+            title.setEnabled(false);
+        } else {
+            tagsbarController.setRemoveActive(true);
+            title.setEnabled(true);
+        }
+        tagsbarController.bindTaggable(place);
+
+        if (mode != Mode.CREATE) {
+            ((ActionBarActivity) getActivity()).setTitle(place.getTitle());
+        }
+        else {
+            ((ActionBarActivity) getActivity()).setTitle(R.string.title_create_place);
+        }
+
+        getActivity().invalidateOptionsMenu();
+
+        updatePlaceDisplay(place);
+    }
+
+    protected void updatePlaceDisplay(Place place) {
+        Log.i(logger, "updatePlaceDisplay() lat/long: " + place.getGeolat() + "/" + place.getGeolong());
+
+        GeoPoint gp = PlacesOverviewFragment.getGeopointFromPlace(place);
+        mapController.setZoom(ZOOM);
+        mapController.setCenter(gp);
+
+        // we remove all icons and add a new icon
+        iconsOverlay.removeAllItems();
+        iconsOverlay.addItem(new OverlayItem("", "", gp));
+    }
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         if (this.mode == Mode.READ) {
             inflater.inflate(R.menu.menu_places_editview_read, menu);
-        }
-        else {
+        } else {
             inflater.inflate(R.menu.menu_places_editview, menu);
         }
     }
@@ -247,34 +261,40 @@ public class PlacesEditviewFragment extends Fragment implements EventGenerator, 
                 place.setTitle(this.title.getText().toString());
                 if (place.created()) {
                     place.update();
-                }
-                else {
+                } else {
                     place.create();
                 }
                 return true;
             case R.id.action_delete:
                 if (place.created()) {
                     //note.delete();
-                    NotesEditviewFragment.confirmDeleteTaggable(this.getActivity(),this.place);
+                    NotesEditviewFragment.confirmDeleteTaggable(this.getActivity(), this.place);
                 }
                 return true;
             case R.id.action_add_tag:
                 AddTagDialogController.getInstance().show(place);
                 break;
             case R.id.action_edit:
-                switchtoMode(Mode.EDIT);
+                this.mode = Mode.EDIT;
+                bindModelToView();
                 break;
         }
 
         return false;
     }
 
-    private void switchtoMode(Mode mode) {
-        this.mode = mode;
-        if (mode == Mode.EDIT) {
-            title.setEnabled(true);
-            this.getActivity().invalidateOptionsMenu();
-        }
+    @Override
+    public void onPause() {
+        Log.i(logger, "onPause()");
+        super.onPause();
+        LifecycleHandling.onPause(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.i(logger, "onDestroy()");
+        super.onDestroy();
+        LifecycleHandling.onDestroy(this);
     }
 
     /**
