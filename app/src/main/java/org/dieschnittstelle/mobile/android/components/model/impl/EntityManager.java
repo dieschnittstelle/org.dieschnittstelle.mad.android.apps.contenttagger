@@ -214,9 +214,11 @@ public class EntityManager implements EntityCRUDOperations {
         if (e == null) {
             Log.d(logger, "readSync(): local instance of entity class " + entityClass + " for id: " + id + " does not exist yet. Read from datasource...");
             e = entityCRUDOperations.get(entityClass).get(currentOperationsScope).read(entityClass, id);
-            addLocalEntity(entityClass, e);
             // we invoke post load which might result in loading associated entities!
-            e.postLoad();
+            if (e != null) {
+                addLocalEntity(entityClass, e);
+                e.postLoad();
+            }
         } else {
             Log.d(logger, "readSync(): read local instance of entity class " + entityClass + " for id: " + id);
         }
@@ -261,15 +263,17 @@ public class EntityManager implements EntityCRUDOperations {
      */
     private void addLocalEntity(Class<? extends Entity> entityClass, Entity entity) {
         prepareLocalEntities(entityClass);
-        Entity existingEntity = this.entityInstances.get(entityClass).get(entity.getId());
-        if (existingEntity != null) {
-            if (existingEntity == entity) {
-                Log.i(logger, "addLocalEntity(): entity of class " + entityClass + " and id " + entity.getId() + " already exists, and it IS  identical to the one to be added. This should not cause referential issues");
-            } else {
-                Log.w(logger, "addLocalEntity(): entity of class " + entityClass + " and id " + entity.getId() + " already exists, but it is NOT identical to the one to be added. This might cause referential issues");
+        if (entity != null) {
+            Entity existingEntity = this.entityInstances.get(entityClass).get(entity.getId());
+            if (existingEntity != null) {
+                if (existingEntity == entity) {
+                    Log.i(logger, "addLocalEntity(): entity of class " + entityClass + " and id " + entity.getId() + " already exists, and it IS  identical to the one to be added. This should not cause referential issues");
+                } else {
+                    Log.w(logger, "addLocalEntity(): entity of class " + entityClass + " and id " + entity.getId() + " already exists, but it is NOT identical to the one to be added. This might cause referential issues");
+                }
             }
+            this.entityInstances.get(entityClass).put(entity.getId(), entity);
         }
-        this.entityInstances.get(entityClass).put(entity.getId(), entity);
     }
 
     private void addLocalEntities(Class<? extends Entity> entityClass, List<Entity> entities) {

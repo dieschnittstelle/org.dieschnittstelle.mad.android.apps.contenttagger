@@ -44,7 +44,11 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
     private IMapController mapController;
 
     // we introduce different modes
-    private static enum Mode { FOCUS, EDIT, OVERVIEW};
+    private static enum Mode {
+        FOCUS, OVERVIEW
+    }
+
+    ;
 
     // the overlay to which the items will be added
     private ItemizedOverlayWithFocus<OverlayItem> overlay;
@@ -66,7 +70,7 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
         private Place place;
 
         public PlaceOverlayItem(Place place) {
-            super(place.getTitle(), "", new GeoPoint(place.getGeolat(), place.getGeolong()));
+            super(place.getTitle(), "", getGeopointFromPlace(place));
             this.place = place;
         }
 
@@ -85,14 +89,14 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
         super.onCreate(savedInstanceState);
     }
 
-    protected OverlayItem findItemForPlace(Place place) {
+    protected int findItemPosForPlace(Place place) {
         for (int i = 0; i < this.overlay.size(); i++) {
             if (((PlaceOverlayItem) this.overlay.getItem(i)).getPlace() == place) {
-                return this.overlay.getItem(i);
+                return i;
             }
         }
         Log.w(logger, "could not find overlay item for place: " + place);
-        return null;
+        return -1;
     }
 
     protected void showPlacesOnMap(List<Place> places) {
@@ -135,11 +139,39 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
         EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.CREATED, Place.class), true, new EventListener<Place>() {
             @Override
             public void onEvent(Event<Place> event) {
-                Log.i(logger, "will add new place to map: " + event.getData());
-                places.add(event.getData());
+                Place place = event.getData();
+                Log.i(logger, "will add new place to map: " + place);
+                overlay.addItem(new PlaceOverlayItem(place));
+                places.add(place);
+                mapController.setCenter(getGeopointFromPlace(place));
             }
         });
 
+        EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.DELETED, Place.class), true, new EventListener<Place>() {
+            @Override
+            public void onEvent(Event<Place> event) {
+                Place place = event.getData();
+                Log.i(logger, "will remove place from map: " + place);
+                int itemPos = findItemPosForPlace(place);
+                if (itemPos != -1) {
+                    overlay.removeItem(itemPos);
+                }
+                places.remove(place);
+            }
+        });
+
+        EventDispatcher.getInstance().addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.UPDATED, Place.class), true, new EventListener<Place>() {
+            @Override
+            public void onEvent(Event<Place> event) {
+                Log.i(logger, "will update place in map: " + event.getData());
+                int itemPos = findItemPosForPlace(event.getData());
+                if (itemPos != -1) {
+                    overlay.removeItem(itemPos);
+                }
+                overlay.addItem(new PlaceOverlayItem(event.getData()));
+                mapController.setCenter(getGeopointFromPlace(event.getData()));
+            }
+        });
 
         return view;
     }
@@ -156,9 +188,17 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LifecycleHandling.onDestroy(this);
+    }
+
+    @Override
     public void onResume() {
         Log.i(logger, "onResume()");
         super.onResume();
+
+        Log.i(logger, "onResume(): first call");
 
         // reset the focused place
         this.focusedPlace = null;
@@ -175,47 +215,58 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
         mapController.setCenter(startPoint);
 
         // create the overlay for displaying places - seems we cannot factor this out to onCreate() to do it only once and keep the overlay
-        ItemizedOverlayWithFocus.OnItemGestureListener listener = new ItemizedIconOverlay.OnItemGestureListener() {
-            @Override
-            public boolean onItemSingleTapUp(int index, Object item) {
-                if (((PlaceOverlayItem)item).getPlace() == focusedPlace) {
-                    Log.d(logger,"onSingleTapUp(): focused place was tapped: " + focusedPlace);
-                    // show the editview (focusedPlace will be re-set onresume)
-//                    ((MainNavigationControllerActivity) getActivity()).showView(PlacesEditviewFragment.class, MainNavigationControllerActivity.createArguments(PlacesEditviewFragment.ARG_PLACE_ID, focusedPlace.getId()), true);
-                    mode = Mode.FOCUS;
-                    updateView(focusedPlace);
+        // it seems that the overlay needs to be recreated...
+
+            ItemizedOverlayWithFocus.OnItemGestureListener listener = new ItemizedIconOverlay.OnItemGestureListener() {
+                @Override
+                public boolean onItemSingleTapUp(int index, Object item) {
+                    if (((PlaceOverlayItem) item).getPlace() == focusedPlace) {
+                        Log.d(logger, "onSingleTapUp(): focused place was tapped: " + focusedPlace);
+                        // check in which mode we are
+                        if (mode == Mode.FOCUS) {
+                            // show the editview (focusedPlace will be re-set onresume)
+                            Bundle args = MainNavigationControllerActivity.createArguments(PlacesEditviewFragment.ARG_PLACE_ID, focusedPlace.getId());
+                            args.putSerializable(PlacesEditviewFragment.ARG_MODE, PlacesEditviewFragment.Mode.READ);
+                            ((MainNavigationControllerActivity) getActivity()).showView(PlacesEditviewFragment.class, args, true);
+                        } else {
+                            mode = Mode.FOCUS;
+                            updateView(focusedPlace);
+                        }
+                        // ???
+                        focusedPlace = null;
+                    } else {
+                        focusedPlace = ((PlaceOverlayItem) item).getPlace();
+                        Log.d(logger, "onSingleTapUp(): focused place has changed: " + focusedPlace);
+                    }
+                    return false;
                 }
-                else {
-                    focusedPlace = ((PlaceOverlayItem)item).getPlace();
-                    Log.d(logger,"onSingleTapUp(): focused place has changed: " + focusedPlace);
+
+                @Override
+                public boolean onItemLongPress(int index, Object item) {
+                    Log.d(logger, "onItemLongPress(): " + item);
+                    return false;
                 }
-                return false;
-            }
+            };
 
-            @Override
-            public boolean onItemLongPress(int index, Object item) {
-                Log.d(logger,"onItemLongPress(): " + item);
-                return false;
-            }
-        };
+            //the overlay
+            this.overlay = new ItemizedOverlayWithFocus<OverlayItem>(getActivity(), new ArrayList<OverlayItem>(), listener);
+            this.overlay.setFocusItemsOnTap(true);
 
-        //the overlay
-        this.overlay = new ItemizedOverlayWithFocus<OverlayItem>(getActivity(), new ArrayList<OverlayItem>(), listener);
-        this.overlay.setFocusItemsOnTap(true);
+            this.map.getOverlays().add(this.overlay);
 
-        this.map.getOverlays().add(this.overlay);
 
-        Log.d(logger,"onResume(): " + this + ": activity is: " + this.getActivity());
+        Log.d(logger, "onResume(): " + this + ": activity is: " + this.getActivity());
 
         // we read out all places unless the places have already been read
         if (this.places == null) {
             Place.readAll(Place.class);
-        }
-        else {
+        } else {
             showPlacesOnMap(this.places);
         }
 
+        LifecycleHandling.onResume(this);
     }
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -237,16 +288,19 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
 
     private void updateView(Place place) {
         if (place != null) {
-            this.mapController.setCenter(new GeoPoint(place.getGeolat(), place.getGeolong()));
+            this.mapController.setCenter(getGeopointFromPlace(place));
         }
         this.mapController.setZoom(getZoomForMode());
     }
 
     private int getZoomForMode() {
         switch (this.mode) {
-            case FOCUS: return 17;
-            case OVERVIEW: return 12;
-            default: return 14;
+            case FOCUS:
+                return 17;
+            case OVERVIEW:
+                return 12;
+            default:
+                return 14;
         }
     }
 
@@ -260,6 +314,10 @@ public class PlacesOverviewFragment extends Fragment implements EventGenerator, 
             return true;
         }
         return false;
+    }
+
+    public static GeoPoint getGeopointFromPlace(Place place) {
+        return new GeoPoint(place.getGeolat(), place.getGeolong());
     }
 
 

@@ -108,6 +108,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
     @Override
     public void onResume() {
         super.onResume();
+        LifecycleHandling.onResume(this);
         if (obsolete) {
             Log.i(logger,"view is obsolete.");
         }

@@ -15,6 +15,7 @@ import android.widget.EditText;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note;
+import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
 import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
@@ -84,10 +85,21 @@ public class NotesReadviewFragment extends NotesEditviewFragment implements Even
     public void onResume() {
         super.onResume();
         ((ActionBarActivity)getActivity()).setTitle(R.string.title_read_note);
+        // TODO: obsoletion could be dealt with at framework level within LifecycleHandling.onResume()
         if (obsolete) {
             Log.i(logger,"view is obsolete. Pop from backstack...");
             getFragmentManager().popBackStack();
         }
+    }
+
+    public void onPause() {
+        super.onPause();
+        LifecycleHandling.onPause(this);
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        LifecycleHandling.onDestroy(this);
     }
 
     @Override

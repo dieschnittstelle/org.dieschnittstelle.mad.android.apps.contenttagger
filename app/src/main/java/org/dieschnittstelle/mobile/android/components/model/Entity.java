@@ -3,6 +3,8 @@ package org.dieschnittstelle.mobile.android.components.model;
 import android.content.Context;
 import android.util.Log;
 
+import com.orm.dsl.Ignore;
+
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
@@ -46,6 +48,7 @@ public abstract class Entity {
     private static EventDispatcher eventDispatcher = EventDispatcher.getInstance();
 
     // collect entities that are pending to be updated once this entity is being created or updated
+    @Ignore
     private Set<Entity> pendingUpdates = new HashSet<Entity>();
 
     // sugar orm requires Long rather than long - this way one can distinguish between no id and the value 0

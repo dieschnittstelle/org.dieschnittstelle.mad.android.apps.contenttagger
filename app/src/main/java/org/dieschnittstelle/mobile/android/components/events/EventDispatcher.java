@@ -222,7 +222,7 @@ public class EventDispatcher {
 		}
 	}
 
-	private boolean isPaused(EventListenerOwner owner) {
+	public boolean isPaused(EventListenerOwner owner) {
 		return this.pausedControllers.contains(owner);
 	}
 
