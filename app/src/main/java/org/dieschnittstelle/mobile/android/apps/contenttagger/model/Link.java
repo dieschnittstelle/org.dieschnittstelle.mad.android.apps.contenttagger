@@ -82,14 +82,14 @@ public class Link extends Taggable implements Serializable {
         this.url = url;
     }
 
-    @Override
-    public void preDestroy() {
-        // before a link is removed, we need to remove it from any tags that are associated with it
-        for (Tag tag : this.getTags()) {
-            tag.getTaggedItems().remove(this);
-            addPendingUpdate(tag);
-        }
-    }
+//    @Override
+//    public void preDestroy() {
+//        // before a link is removed, we need to remove it from any tags that are associated with it
+//        for (Tag tag : this.getTags()) {
+//            tag.getTaggedItems().remove(this);
+//            addPendingUpdate(tag);
+//        }
+//    }
 
     // update last modified on update
     public void create()  {

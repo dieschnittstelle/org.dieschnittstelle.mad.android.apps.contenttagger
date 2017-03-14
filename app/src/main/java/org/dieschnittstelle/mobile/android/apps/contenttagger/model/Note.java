@@ -47,14 +47,14 @@ public class Note extends Taggable implements Serializable {
         this.content = content;
     }
 
-    @Override
-    public void preDestroy() {
-        // before a link is removed, we need to remove it from any tags that are associated with it
-        for (Tag tag : this.getTags()) {
-            tag.getTaggedItems().remove(this);
-            addPendingUpdate(tag);
-        }
-    }
+//    @Override
+//    public void preDestroy() {
+//        // before a link is removed, we need to remove it from any tags that are associated with it
+//        for (Tag tag : this.getTags()) {
+//            tag.getTaggedItems().remove(this);
+//            addPendingUpdate(tag);
+//        }
+//    }
 
     @Override
     public String getTitle() {
@@ -84,10 +84,6 @@ public class Note extends Taggable implements Serializable {
     public String getAssociations() {
         return this.associations;
     }
-
-//    public void setTags(List<Tag> tags) {
-//        this.tags = tags;
-//    }
 
     public String getContent() {
         return content;

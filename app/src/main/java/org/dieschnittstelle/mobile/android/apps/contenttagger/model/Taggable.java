@@ -17,6 +17,13 @@ public abstract class Taggable extends Entity {
     // this attribute will be ignored when persisting / reading because it will be handled via the associations string in prePersist()/postLoad()
     public List<Tag> tags = new ArrayList<Tag>();
 
+    @Ignore
+    public List<Taggable> attachments = new ArrayList<Taggable>();
+
+    @Ignore
+    public List<Taggable> attachers = new ArrayList<Taggable>();
+
+
     // Comparators
     public static Comparator<Taggable> COMPARE_BY_NUM_OF_TAGS = new Comparator<Taggable>() {
         @Override
@@ -62,10 +69,18 @@ public abstract class Taggable extends Entity {
 
     @Override
     public void preDestroy() {
-        // before a link is removed, we need to remove it from any tags that are associated with it
+        // before a taggable is removed we remove all associations
         for (Tag tag : this.tags) {
             tag.getTaggedItems().remove(this);
             addPendingUpdate(tag);
+        }
+        for (Taggable attachment : this.attachments) {
+            attachment.removeAttacher(this);
+            addPendingUpdate(attachment);
+        }
+        for (Taggable attacher : this.attachers) {
+            attacher.removeAttachment(this);
+            addPendingUpdate(attacher);
         }
     }
 
@@ -73,19 +88,39 @@ public abstract class Taggable extends Entity {
         this.tags = tags;
     }
 
+    public void addAttachment(Taggable attachment) {
+        if (!this.attachments.contains(attachment)) {
+            this.attachments.add(attachment);
+            attachment.addAttacher(this);
+            addPendingUpdate(attachment);
+        }
+    }
+
+    public void removeAttachment(Taggable attachment) {
+        this.attachments.remove(attachment);
+        attachment.removeAttacher(this);
+        addPendingUpdate(attachment);
+    }
+
+    public List<Taggable> getAttachments() {
+        return this.attachments;
+    }
+
+    /*
+     * bidirectionality attachment-attachers will be handled by methods for attachment (see above)
+     */
+    public void addAttacher(Taggable attacher) {
+        this.attachers.add(attacher);
+    }
+
+    public void removeAttacher(Taggable attacher) {
+        this.attachers.remove(attacher);
+    }
+
+    public List<Taggable> getAttachers() {
+        return this.attachers;
+    }
+
     public abstract String getTitle();
-
-//    public abstract void addAttachment(Taggable attachment);
-//
-//    public abstract void removeAttachment(Taggable attachment);
-//
-//    public abstract List<Taggable> getAttachments();
-//
-//    public abstract void addAttacher(Taggable attacher);
-//
-//    public abstract void removeAttacher(Taggable attacher);
-//
-//    public abstract List<Taggable> getAttachers();
-
 
 }

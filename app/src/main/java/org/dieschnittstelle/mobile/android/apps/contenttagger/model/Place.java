@@ -97,39 +97,4 @@ public class Place extends Taggable implements Serializable {
         super.update();
     }
 
-//    /*
-//     * this is for attachment handling
-//     *
-//     * TODO: clarify whether this can be placed in the abstract superclass
-//     */
-//    @Ignore
-//    private List<Taggable> attachments = new ArrayList<Taggable>();
-//
-//    @Ignore
-//    private List<Taggable> attachers = new ArrayList<Taggable>();
-//
-//    public void addAttachment(Taggable attachment) {
-//        this.attachments.add(attachment);
-//    }
-//
-//    public void removeAttachment(Taggable attachment) {
-//        this.attachments.remove(attachment);
-//    }
-//
-//    public List<Taggable> getAttachments() {
-//        return this.attachments;
-//    }
-//
-//    public void addAttacher(Taggable attacher) {
-//        this.attachers.add(attacher);
-//    }
-//
-//    public void removeAttacher(Taggable attacher) {
-//        this.attachers.remove(attacher);
-//    }
-//
-//    public List<Taggable> getAttachers() {
-//        return this.attachers;
-//    }
-
 }
