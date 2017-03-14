@@ -28,10 +28,6 @@ public class Link extends Taggable implements Serializable {
 
     private String title;
 
-    @Ignore
-    // this attribute will be ignored when persisting / reading because it will be handled via the associations string in prePersist()/postLoad()
-    private List<Tag> tags = new ArrayList<Tag>();
-
     private long created;
 
     private String url;
@@ -47,27 +43,6 @@ public class Link extends Taggable implements Serializable {
     public Link(String title, String url) {
         this.title = title;
         this.url = url;
-    }
-
-    @Override
-    public List<Tag> getTags() {
-        return this.tags;
-    }
-
-    @Override
-    public void addTag(Tag tag) {
-        if (!this.tags.contains(tag)) {
-            this.tags.add(tag);
-            tag.getTaggedItems().add(this);
-            addPendingUpdate(tag);
-        }
-    }
-
-    @Override
-    public void removeTag(Tag tag) {
-        this.tags.remove(tag);
-        tag.getTaggedItems().remove(this);
-        addPendingUpdate(tag);
     }
 
     @Override
@@ -99,10 +74,6 @@ public class Link extends Taggable implements Serializable {
         return this.associations;
     }
 
-    public void setTags(List<Tag> tags) {
-        this.tags = tags;
-    }
-
     public String getUrl() {
         return url;
     }
@@ -114,7 +85,7 @@ public class Link extends Taggable implements Serializable {
     @Override
     public void preDestroy() {
         // before a link is removed, we need to remove it from any tags that are associated with it
-        for (Tag tag : this.tags) {
+        for (Tag tag : this.getTags()) {
             tag.getTaggedItems().remove(this);
             addPendingUpdate(tag);
         }
@@ -133,7 +104,7 @@ public class Link extends Taggable implements Serializable {
                 ", url='" + url + '\'' +
                 ", created=" + created +
                 ", id=" + id +
-                ", tags=" + tags +
+                ", tags=" + getTags() +
                 '}';
     }
 

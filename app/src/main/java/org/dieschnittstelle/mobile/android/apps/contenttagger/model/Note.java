@@ -30,10 +30,6 @@ public class Note extends Taggable implements Serializable {
 
     private String title;
 
-    @Ignore
-    // this attribute will be ignored when persisting / reading because it will be handled via the associations string in prePersist()/postLoad()
-    private List<Tag> tags = new ArrayList<Tag>();
-
     private String content;
 
     private long lastmodified = System.currentTimeMillis();
@@ -52,31 +48,9 @@ public class Note extends Taggable implements Serializable {
     }
 
     @Override
-    public List<Tag> getTags() {
-        return this.tags;
-    }
-
-    @Override
-    public void addTag(Tag tag) {
-        if (!this.tags.contains(tag)) {
-            this.tags.add(tag);
-            // we directly access the inverse attribute in order to avoid loops
-            tag.getTaggedItems().add(this);
-            addPendingUpdate(tag);
-        }
-    }
-
-    @Override
-    public void removeTag(Tag tag) {
-        this.tags.remove(tag);
-        tag.getTaggedItems().remove(this);
-        addPendingUpdate(tag);
-    }
-
-    @Override
     public void preDestroy() {
         // before a link is removed, we need to remove it from any tags that are associated with it
-        for (Tag tag : this.tags) {
+        for (Tag tag : this.getTags()) {
             tag.getTaggedItems().remove(this);
             addPendingUpdate(tag);
         }
@@ -111,9 +85,9 @@ public class Note extends Taggable implements Serializable {
         return this.associations;
     }
 
-    public void setTags(List<Tag> tags) {
-        this.tags = tags;
-    }
+//    public void setTags(List<Tag> tags) {
+//        this.tags = tags;
+//    }
 
     public String getContent() {
         return content;
@@ -141,7 +115,7 @@ public class Note extends Taggable implements Serializable {
     public String toString() {
         return "Note{" +
                 "title='" + title + '\'' +
-                ", tags=" + tags +
+                ", tags=" + getTags() +
                 ", content='" + content + '\'' +
                 ", lastmodified=" + lastmodified +
                 ", id=" + id +

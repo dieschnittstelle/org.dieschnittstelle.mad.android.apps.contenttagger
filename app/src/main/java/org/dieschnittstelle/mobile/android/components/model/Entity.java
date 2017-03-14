@@ -186,8 +186,17 @@ public abstract class Entity {
 
         StringBuffer entityAssociations = new StringBuffer();
 
-        // we iterate over the fields and check for Collection-Type attributes
+        // we collect the local and the inherited public fields
+        Set<Field> fields = new HashSet<Field>();
         for (Field field : this.getClass().getDeclaredFields()) {
+            fields.add(field);
+        }
+        for (Field field : this.getClass().getFields()) {
+            fields.add(field);
+        }
+
+        // we iterate over the fields and check for Collection-Type attributes
+        for (Field field : fields) {
             if (Collection.class.isAssignableFrom(field.getType()) /*&& field.getGenericType() != null*/) {
                 Log.d(logger, "prePersist(): found collection typed field with generic collection type: " + field.getName());
                 Type[] typeParameters = ((ParameterizedType)field.getGenericType()).getActualTypeArguments();
@@ -253,14 +262,32 @@ public abstract class Entity {
                                 }
                             }
                         }
+                        Field currentFieldObj = null;
+
                         try {
                             // now we need to set the field value - we use getDeclaredField() in order to access the private field of the concrete entity classes - however, inheritance will not work here!
-                            Field currentFieldObj = this.getClass().getDeclaredField(currentFieldName);
-                            currentFieldObj.setAccessible(true);
-                            currentFieldObj.set(this, currentEntities);
+                            currentFieldObj = this.getClass().getDeclaredField(currentFieldName);
                         }
-                        catch (Exception e) {
-                            Log.e(logger,"postLoad(): got exception trying to set reference attribute " + currentFieldName + " to values: " + currentEntities + ". Exception is: " + e,e);
+                        // lookup the field in the parent classes - then it must be public, though...
+                        // TODO: make this more sophisticated at some moment and consider getters of superclasses rather than requiring public fields
+                        catch (NoSuchFieldException e1) {
+                            try {
+                                currentFieldObj = this.getClass().getField(currentFieldName);
+                            }
+                            catch (NoSuchFieldException e2) {
+
+                            }
+                        }
+                        if (currentFieldObj != null) {
+                            currentFieldObj.setAccessible(true);
+                            try {
+                                currentFieldObj.set(this, currentEntities);
+                            } catch (Exception e) {
+                                Log.e(logger, "postLoad(): got exception trying to set reference attribute " + currentFieldName + " to values: " + currentEntities + ". Exception is: " + e, e);
+                            }
+                        }
+                        else {
+                            Log.e(logger, "postLoad(): could not access field: " + currentFieldName + ". Fields either need to be declared on the concrete entity classes or as public fields in superclasses.");
                         }
                     }
                 }

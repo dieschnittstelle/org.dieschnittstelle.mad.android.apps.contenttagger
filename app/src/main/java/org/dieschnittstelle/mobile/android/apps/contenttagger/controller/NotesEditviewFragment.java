@@ -52,6 +52,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
     protected EditText title;
     protected EditText content;
     protected TagsbarController tagsbarController;
+    protected AttachmentsPanelController attachmentsController;
 
     /*
      * the model object that we use
@@ -102,6 +103,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
                 title.setText(note.getTitle());
                 content.setText(note.getContent());
                 tagsbarController.bindTaggable(note);
+                attachmentsController.bindTaggable(note);
             }
         });
 
@@ -127,6 +129,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
                 note = new Note();
                 // this is required in order for the tagbar to be available for new notes
                 tagsbarController.bindTaggable(note);
+                attachmentsController.bindTaggable(note);
             }
 
             // we instantiate the reusable wrapper for the add tag dialogs - needs to be done for each onResume() as settings might have changed in the meantime
@@ -183,7 +186,9 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
         this.title = (EditText)contentView.findViewById(R.id.title);
         this.content = (EditText)contentView.findViewById(R.id.content);
 
+        // TODO: tagsbarController could be refactored such that reading out the tagsbar will be encapsulated therein
         this.tagsbarController = new TagsbarController(this,(ViewGroup)contentView.findViewById(R.id.tagsbar),R.layout.tagsbar_itemview);
+        this.attachmentsController = new AttachmentsPanelController(contentView);
 
         return contentView;
     }

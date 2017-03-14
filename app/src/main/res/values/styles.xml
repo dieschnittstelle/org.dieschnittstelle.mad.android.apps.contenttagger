@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="windowActionBar">false</item>
         <!-- color settings taken from https://www.murrayc.com/permalink/2014/10/28/android-changing-the-toolbars-text-color-and-overflow-icon-color/ -->
@@ -10,6 +10,7 @@
         <item name="android:textColorSecondary">@color/abc_secondary_text_material_dark</item>
         <!-- this is for the background of the action menu -->
         <item name="android:itemBackground" type="color">@color/itemmenu_heading_background</item>
+        <item name="android:colorAccent">#32cd32</item>
     </style>
 
     <item name="text_background_light" type="color">#5b5b5b</item>

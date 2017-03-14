@@ -16,10 +16,6 @@ public class Place extends Taggable implements Serializable {
 
     private String title;
 
-    @Ignore
-    // this attribute will be ignored when persisting / reading because it will be handled via the associations string in prePersist()/postLoad()
-    private List<Tag> tags = new ArrayList<Tag>();
-
     private Long id;
 
     private String associations;
@@ -34,37 +30,6 @@ public class Place extends Taggable implements Serializable {
 
     public Place(String title) {
         this.title = title;
-    }
-
-    @Override
-    public List<Tag> getTags() {
-        return this.tags;
-    }
-
-    @Override
-    public void addTag(Tag tag) {
-        if (!this.tags.contains(tag)) {
-            this.tags.add(tag);
-            // we directly access the inverse attribute in order to avoid loops
-            tag.getTaggedItems().add(this);
-            addPendingUpdate(tag);
-        }
-    }
-
-    @Override
-    public void removeTag(Tag tag) {
-        this.tags.remove(tag);
-        tag.getTaggedItems().remove(this);
-        addPendingUpdate(tag);
-    }
-
-    @Override
-    public void preDestroy() {
-        // before a link is removed, we need to remove it from any tags that are associated with it
-        for (Tag tag : this.tags) {
-            tag.getTaggedItems().remove(this);
-            addPendingUpdate(tag);
-        }
     }
 
     @Override
@@ -94,10 +59,6 @@ public class Place extends Taggable implements Serializable {
     @Override
     public String getAssociations() {
         return this.associations;
-    }
-
-    public void setTags(List<Tag> tags) {
-        this.tags = tags;
     }
 
     // update last modified on update
@@ -135,5 +96,40 @@ public class Place extends Taggable implements Serializable {
     public void update()  {
         super.update();
     }
+
+//    /*
+//     * this is for attachment handling
+//     *
+//     * TODO: clarify whether this can be placed in the abstract superclass
+//     */
+//    @Ignore
+//    private List<Taggable> attachments = new ArrayList<Taggable>();
+//
+//    @Ignore
+//    private List<Taggable> attachers = new ArrayList<Taggable>();
+//
+//    public void addAttachment(Taggable attachment) {
+//        this.attachments.add(attachment);
+//    }
+//
+//    public void removeAttachment(Taggable attachment) {
+//        this.attachments.remove(attachment);
+//    }
+//
+//    public List<Taggable> getAttachments() {
+//        return this.attachments;
+//    }
+//
+//    public void addAttacher(Taggable attacher) {
+//        this.attachers.add(attacher);
+//    }
+//
+//    public void removeAttacher(Taggable attacher) {
+//        this.attachers.remove(attacher);
+//    }
+//
+//    public List<Taggable> getAttachers() {
+//        return this.attachers;
+//    }
 
 }
