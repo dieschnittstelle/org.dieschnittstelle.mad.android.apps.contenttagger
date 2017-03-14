@@ -192,10 +192,19 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
         }
     }
 
+    public void clear() {
+        this.entities.clear();
+    }
+
     public void updateItem(Entity item) {
         int index = this.entities.indexOf(item);
         if (index > -1) {
-            this.notifyItemChanged(index);
+            try {
+                this.notifyItemChanged(index);
+            }
+            catch (IllegalStateException ise) {
+                Log.w(logger,"got illegal state exception on updateItem(): " + ise,ise);
+            }
         }
     }
 

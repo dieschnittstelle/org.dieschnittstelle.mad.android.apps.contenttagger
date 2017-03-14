@@ -1,6 +1,10 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
+import android.app.Activity;
+import android.app.Fragment;
+import android.content.ClipData;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -24,53 +28,42 @@ import java.util.List;
 
 /**
  * Created by master on 14.03.17.
- *
+ * <p>
  * encapsulates control of an attachments panel which allows to associate taggables with taggables, starting with media
  * for using gridview see https://developer.android.com/guide/topics/ui/layout/gridview.html
  *
+ * for drag&drop handling, see: https://blahti.wordpress.com/2011/10/03/drag-drop-for-android-gridview/
  */
 public class AttachmentsPanelController {
 
     protected static String logger = "AttachmentsPanelController";
 
+    public static final int REQUEST_ATTACH_MEDIA = 10;
+
     private Taggable taggable;
     private GridView mediaGrid;
     private FloatingActionButton addMediaAction;
     private MediaAdapter mediaAdapter;
-    private Context owner;
+    private Fragment owner;
+    private View attachmentsPanel;
 
-    public AttachmentsPanelController(Context owner,View parentView) {
+    public AttachmentsPanelController(Fragment owner, View parentView) {
 
         this.owner = owner;
-        this.mediaGrid = (GridView)parentView.findViewById(R.id.mediaGrid);
+        this.mediaGrid = (GridView) parentView.findViewById(R.id.mediaGrid);
         this.addMediaAction = (FloatingActionButton) parentView.findViewById(R.id.addMedia);
+        this.attachmentsPanel = parentView.findViewById(R.id.attachmentsPanel);
 
         // add a click listener on the action
         addMediaAction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 addMedia();
-                // well, let's see whether creation of attachent will be done automatically...
-//                new AsyncTask<Taggable,Void,Taggable>() {
-//
-//                    @Override
-//                    protected Taggable doInBackground(Taggable... taggables) {
-//                        // well, we create a newMedia element
-//                        newMedia.createSync();
-//                        return newMedia;
-//                    }
-//
-//                    @Override
-//                    protected void onPostExecute(Taggable taggable) {
-//                        AttachmentsPanelController.this.taggable.addAttachment(taggable);
-//                    }
-//
-//                }.execute(newMedia);
             }
         });
 
         // populate the view
-        mediaAdapter = new MediaAdapter(owner);
+        mediaAdapter = new MediaAdapter(owner.getActivity());
         mediaGrid.setAdapter(mediaAdapter);
 
 
@@ -81,30 +74,51 @@ public class AttachmentsPanelController {
     }
 
     private void addMedia() {
-        Log.i(logger,"addMedia()");
-        // we create a new media element and add it to the taggable
-        final Media newMedia = new Media();
-        // some random stuff
-        long currentTime = System.currentTimeMillis();
-        newMedia.setTitle(String.valueOf(currentTime));
+        Log.i(logger, "addMedia()");
+//        // we create a new media element and add it to the taggable
+//        final Media newMedia = new Media();
+//        // some random stuff
+//        long currentTime = System.currentTimeMillis();
+//        newMedia.setTitle(String.valueOf(currentTime));
+//
+//        String contentUri = "http://lorempixel.com/" + (400 / ((currentTime % 4)+1)) + "/" + (300 / ((currentTime % 3)+1));
+//        Log.i(logger,"setting randomised contentUri: " + contentUri);
+//        newMedia.setContentUri(contentUri);
+//
+//        // we add the media as attachment
+//        AttachmentsPanelController.this.taggable.addAttachment(newMedia);
+//
+//        // ... and show it in the grid
+//        mediaAdapter.addItem(newMedia);
 
-        String contentUri = "http://lorempixel.com/" + (400 / ((currentTime % 4)+1)) + "/" + (300 / ((currentTime % 3)+1));
-        Log.i(logger,"setting randomised contentUri: " + contentUri);
-        newMedia.setContentUri(contentUri);
+        Intent filePickerIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        filePickerIntent.setType("*/*");
+        filePickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        owner.startActivityForResult(filePickerIntent, REQUEST_ATTACH_MEDIA);
 
-        // we add the media as attachment
-        AttachmentsPanelController.this.taggable.addAttachment(newMedia);
+    }
 
-        // ... and show it in the grid
-        mediaAdapter.addItem(newMedia);
+    public void addMediaItemWithUri(Uri uri, Media.ContentType contentType) {
+        Media media = new Media();
+        media.setContentUri(String.valueOf(uri));
+        media.setContentType(contentType);
+
+        this.taggable.addAttachment(media);
+        mediaAdapter.addItem(media);
     }
 
     public void bindTaggable(Taggable taggable) {
         this.taggable = taggable;
-        Log.i(logger,"bindTaggable(): taggable has attachments: " + taggable.getAttachments());
+        mediaAdapter.clear();
+        Log.i(logger, "bindTaggable(): taggable has attachments: " + taggable.getAttachments());
         // we add the items to the adapter
         if (taggable.getAttachments().size() > 0) {
+//            attachmentsPanel.setVisibility(View.VISIBLE);
             mediaAdapter.addItems((List) taggable.getAttachments());
+        }
+        // otherwise, we set ourselves to GONE
+        else {
+//            attachmentsPanel.setVisibility(View.GONE);
         }
     }
 
@@ -134,7 +148,7 @@ public class AttachmentsPanelController {
 
         // create a new ImageView for each item referenced by the Adapter
         public View getView(int position, View convertView, ViewGroup parent) {
-            Log.i(logger,"getView(): position: " + position);
+            Log.i(logger, "getView(): position: " + position);
 
             final ImageView imageView;
             if (convertView == null) {
@@ -148,42 +162,12 @@ public class AttachmentsPanelController {
             }
 
             Media mediaItem = items.get(position);
-
-            // check whether the item already has a thumbnail set
-            Bitmap thumbnail = mediaItem.getThumbnail();
-            if (thumbnail != null) {
-                imageView.setImageBitmap(thumbnail);
-            }
-            // otherwise we load the img asynchronously
-            else {
-                new AsyncTask<Media,Void,Bitmap>() {
-
-                    private Media mediaItem;
-
-                    @Override
-                    protected Bitmap doInBackground(Media... medias) {
-                        this.mediaItem = medias[0];
-                        Log.i(logger,"loading image data for media item with url: " + mediaItem.getContentUri());
-                        try {
-                            URL url = new URL(mediaItem.getContentUri());
-                            return BitmapFactory.decodeStream(url.openConnection() .getInputStream());
-                        }
-                        catch (Exception e) {
-                            Log.e(logger,"got exception trying to load media: " + e,e);
-                            return null;
-                        }
-                    }
-
-                    @Override
-                    protected void onPostExecute(Bitmap bitmap) {
-                        if (bitmap != null) {
-                            mediaItem.setThumbnail(bitmap);
-                            Log.i(logger,"setting image data on image view: " + imageView);
-                            imageView.setImageBitmap(bitmap);
-                        }
-                    }
-                }.execute(mediaItem);
-            }
+            mediaItem.createThumbnail(owner.getActivity(), new Media.OnThumbnailCreatedHandler() {
+                @Override
+                public void onThumbnailCreated(Bitmap thumbnail) {
+                    imageView.setImageBitmap(thumbnail);
+                }
+            });
 
             return imageView;
         }
@@ -194,9 +178,45 @@ public class AttachmentsPanelController {
         }
 
         public void addItems(Collection<Media> media) {
+            if (media.size() > 0) {
+                Log.i(logger,"addItems(): thumbnail on 1st element of media list is: " + media.iterator().next().getThumbnail());
+            }
             this.items.addAll(media);
             super.notifyDataSetChanged();
         }
 
+        public void clear() {
+            this.items.clear();
+            super.notifyDataSetChanged();
+        }
+
     }
+
+    // TODO: this is kindof adhoc, could be generalised
+    public boolean handlesResult(int requestCode) {
+        return (requestCode == REQUEST_ATTACH_MEDIA);
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i(logger, "onActivityResult()");
+
+        if (requestCode == REQUEST_ATTACH_MEDIA) {
+            if (data != null) {
+                ClipData clipData = data.getClipData();
+                // this is the multiple select case
+                if (clipData != null) {
+                    for (int i = 0; i < clipData.getItemCount(); i++) {
+                        ClipData.Item path = clipData.getItemAt(i);
+                        Log.i(logger, "selectedImage (multiple): " + String.valueOf(path.getUri()));
+                        addMediaItemWithUri(path.getUri(), Media.ContentType.LOCALURI);
+                    }
+                } else {
+                    Uri selectedImage = data.getData();
+                    Log.i(logger, "selectedImage (single): " + selectedImage);
+                    addMediaItemWithUri(selectedImage, Media.ContentType.LOCALURI);
+                }
+            }
+        }
+    }
+
 }

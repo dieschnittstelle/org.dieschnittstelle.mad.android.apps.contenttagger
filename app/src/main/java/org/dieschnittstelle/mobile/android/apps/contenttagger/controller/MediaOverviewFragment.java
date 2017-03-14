@@ -1,6 +1,8 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
 import android.app.Fragment;
+import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -53,6 +55,8 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
 
     private View contentView;
 
+    // check whether we show attachments or not
+    private boolean showAttachments;
 
     /*
      * set event listeners in oncreate
@@ -91,10 +95,11 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
                 List<Media> selected = new ArrayList<Media>();
                 for (Media media : event.getData()) {
                     // we only display those media items that have not been created as attachments - TODO: rethink this at some moment
-                    if (media.getAttachers().size() == 0) {
+                    if (media.getAttachers().size() == 0 || showAttachments) {
                         selected.add(media);
                     }
                 }
+                adapter.clear();
                 adapter.addItems(selected);
             }
         });
@@ -121,12 +126,31 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
                 }
 
                 @Override
-                public void onBindEntityViewHolder(MediaListItemViewHolder holder, Media entity, int position) {
+                public void onBindEntityViewHolder(final MediaListItemViewHolder holder, final Media entity, int position) {
                     Log.d(logger,"onBindEntityViewHolder(): id is: " + entity.getId());
-                    holder.title.setText(entity.getTitle());
-                    holder.subtitle.setText(String.valueOf(entity.getCreated()));
+
+                    boolean attachedMedia = ((entity.getTitle() == null || entity.getTitle().trim().length() == 0) && entity.getAttachers().size() > 0);
+
+                    if (attachedMedia) {
+                        if (entity.getAttachers().get(0) != null) {
+                            holder.title.setText(entity.getAttachers().get(0).getTitle());
+                        }
+                        holder.title.setTypeface(null, Typeface.ITALIC);
+                        holder.subtitle.setText("");
+                    }
+                    else {
+                        holder.title.setText(entity.getTitle());
+                        holder.title.setTypeface(null, Typeface.NORMAL);
+                        holder.subtitle.setText(String.valueOf(entity.getCreated()));
+                    }
+
                     if (entity.getContentUri() != null) {
-                        holder.mediaContent.setImageURI(Uri.parse(entity.getContentUri()));
+                        entity.createThumbnail(getActivity(), new Media.OnThumbnailCreatedHandler() {
+                            @Override
+                            public void onThumbnailCreated(Bitmap thumbnail) {
+                                holder.mediaContent.setImageBitmap(thumbnail);
+                            }
+                        });
                     }
                     int numOfTags = entity.getTags() != null ? entity.getTags().size() : 0;
                     if (numOfTags == 0) {
@@ -233,6 +257,10 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_media_overview,menu);
+        MenuItem item = menu.findItem(R.id.action_toggle_attachments);
+        if (item != null) {
+            item.setTitle(this.showAttachments ? R.string.action_hide_attachments : R.string.action_show_attachments);
+        }
     }
 
     @Override
@@ -244,6 +272,12 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
         }
         else if (item.getItemId() == R.id.action_sort) {
             this.adapter.sortNext();
+        }
+        else if (item.getItemId() == R.id.action_toggle_attachments) {
+            Log.d(logger,"toggleAttachments(): showAttachments: " + this.showAttachments);
+            this.showAttachments = !this.showAttachments;
+            this.getActivity().invalidateOptionsMenu();
+            Media.readAll(Media.class, this);
         }
 
         return false;

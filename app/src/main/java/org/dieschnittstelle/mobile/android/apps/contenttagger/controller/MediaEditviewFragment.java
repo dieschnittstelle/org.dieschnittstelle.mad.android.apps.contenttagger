@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
@@ -129,6 +130,7 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
         }
         else {
             Log.d(logger, "onResume(): " + this.getClass());
+            Log.d(logger, "onResume(): media is: " + this.media);
             // we read out the id from the arguments
             long mediaId = -1;
             if (getArguments().containsKey(ARG_MEDIA_ID)) {
@@ -222,15 +224,14 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_PICK_IMAGE && resultCode == Activity.RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
-//            String[] filePathColumn = { MediaStore.Images.Media.DATA };
-//            Cursor cursor = getActivity().getContentResolver().query(Uri.parse(selectedImage.toString()),filePathColumn, null, null, null);
-//            cursor.moveToFirst();
-//            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-//            String picturePath = cursor.getString(columnIndex);
-//            cursor.close();
             this.media.setContentUri(selectedImage.toString());
-            Log.i(logger,"setting image uri: " + selectedImage.toString());
-            this.mediaContent.setImageURI(selectedImage);
+            this.media.setContentType(Media.ContentType.LOCALURI);
+            this.media.createThumbnail(this.getActivity(), new Media.OnThumbnailCreatedHandler() {
+                @Override
+                public void onThumbnailCreated(Bitmap thumbnail) {
+                    MediaEditviewFragment.this.mediaContent.setImageURI(Uri.parse(media.getContentUri()));
+                }
+            });
         }
     }
 }

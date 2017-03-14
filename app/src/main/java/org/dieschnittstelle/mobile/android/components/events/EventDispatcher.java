@@ -109,6 +109,7 @@ public class EventDispatcher {
 		List<EventListenerWrapper> currentlisteners = alllisteners.get(event.toIdentifier());
 		if (currentlisteners != null) {
 			Log.i(logger, "will notify " + currentlisteners.size() + " listeners of event: " + event.toIdentifier());
+			Log.d(logger, "all listeners are: " + alllisteners);
 			for (EventListenerWrapper listener : currentlisteners) {
 				// in case the listener is paused, we will add the event as pending event for it
 				if (isPaused(listener.getOwner()) && !listener.isExecuteOnPause()) {

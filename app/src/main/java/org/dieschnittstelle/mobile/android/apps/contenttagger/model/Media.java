@@ -1,11 +1,23 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.model;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.ParcelFileDescriptor;
+import android.util.Log;
 
 import com.orm.dsl.Ignore;
 import com.orm.dsl.Table;
 
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -15,6 +27,11 @@ import java.util.List;
  */
 @Table
 public class Media extends Taggable implements Serializable {
+
+    public static enum ContentType {LOCALURI, EXTURI, LOCALDATA};
+
+    public static final int THUMBNAIL_WIDTH = 150;
+    public static final int THUMBNAIL_HEIGHT= 150;
 
     // Comparators
     public static Comparator<Media> COMPARE_BY_DATE = new Comparator<Media>() {
@@ -37,8 +54,12 @@ public class Media extends Taggable implements Serializable {
 
     private String associations;
 
+    private ContentType contentType;
+
     @Ignore
     private Bitmap thumbnail;
+
+    private String thumbnailPath;
 
     public Media() {
 
@@ -132,4 +153,157 @@ public class Media extends Taggable implements Serializable {
     public void setThumbnail(Bitmap thumbnail) {
         this.thumbnail = thumbnail;
     }
+
+    public String getThumbnailPath() {
+        return thumbnailPath;
+    }
+
+    public void setThumbnailPath(String thumbnailPath) {
+        this.thumbnailPath = thumbnailPath;
+    }
+
+    public ContentType getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(ContentType contentType) {
+        this.contentType = contentType;
+    }
+
+    /*
+     *
+     */
+    public static interface OnThumbnailCreatedHandler {
+
+        public void onThumbnailCreated(Bitmap thumbnail);
+
+    }
+
+    /*
+     * this covers
+     */
+    public void createThumbnail(final Context context, final OnThumbnailCreatedHandler callback) {
+        if (this.thumbnail != null) {
+            Log.i(logger,"createThumbnail(): thumbnail has been created already");
+            callback.onThumbnailCreated(this.thumbnail);
+        }
+        else if (this.thumbnailPath != null) {
+            Log.i(logger,"createThumbnail(): load thumbnail from local path: " + this.thumbnailPath);
+
+            new AsyncTask<Void,Void,Bitmap>() {
+
+                @Override
+                protected Bitmap doInBackground(Void... voids) {
+                    return readImageFromPath(Media.this.thumbnailPath);
+                }
+
+                @Override
+                protected void onPostExecute(Bitmap bitmap) {
+                    callback.onThumbnailCreated(bitmap);
+                }
+
+            }.execute();
+
+        }
+        else if (this.contentType == ContentType.EXTURI) {
+            new AsyncTask<Void, Void, Bitmap>() {
+
+                @Override
+                protected Bitmap doInBackground(Void... voids) {
+                    Log.i(logger, "createThumbnail(): loading image data for media item with url: " + Media.this.getContentUri());
+                    try {
+                        URL url = new URL(Media.this.getContentUri());
+                        Bitmap orig = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+                        return extractThumbnail(orig,context);
+                    } catch (Exception e) {
+                        Log.e(logger, "createThumbnail(): got exception trying to load media: " + e, e);
+                        return null;
+                    }
+                }
+
+                @Override
+                protected void onPostExecute(Bitmap bitmap) {
+                    callback.onThumbnailCreated(bitmap);
+                }
+
+            }.execute();
+
+        }
+        else if (this.contentType == ContentType.LOCALURI) {
+            new AsyncTask<Void,Void,Bitmap>() {
+
+                @Override
+                protected Bitmap doInBackground(Void... voids) {
+                    try {
+                        Log.i(logger,"createThumbnail(): will load local data and create thumbnail...");
+                        // see https://developer.android.com/guide/topics/providers/document-provider.html
+                        ParcelFileDescriptor parcelFileDescriptor =
+                                context.getContentResolver().openFileDescriptor(Uri.parse(Media.this.getContentUri()), "r");
+                        FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+                        Bitmap orig = BitmapFactory.decodeFileDescriptor(fileDescriptor);
+                        parcelFileDescriptor.close();
+                        return extractThumbnail(orig,context);
+                    }
+                    catch (Exception e) {
+                        Log.e(logger,"createThumbnail(): got an exception trying to read data from local uri: " + e,e);
+                        return null;
+                    }
+                }
+
+                @Override
+                protected void onPostExecute(Bitmap bitmap) {
+                    callback.onThumbnailCreated(bitmap);
+                }
+
+            }.execute();
+
+        }
+        else {
+            Log.e(logger,"createThumbnail(): contentType not supported: " + this.contentType);
+            callback.onThumbnailCreated(null);
+        }
+    }
+
+    public Bitmap extractThumbnail(Bitmap orig,Context context) {
+        Bitmap thumb = ThumbnailUtils.extractThumbnail(orig,THUMBNAIL_WIDTH,THUMBNAIL_HEIGHT);
+        String path = "/thumbnails/"+System.currentTimeMillis() + ".bmp";
+        String writtenPath = writeImageToPath(thumb,path,context);
+        this.setThumbnailPath(writtenPath);
+        this.setThumbnail(thumb);
+        return thumb;
+    }
+
+    public String writeImageToPath(Bitmap image,String filename, Context context) {
+
+        FileOutputStream out = null;
+        try {
+            File file = new File(context.getFilesDir(), filename);
+            if (!file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
+            }
+            out = new FileOutputStream(file);
+            image.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+            // PNG is a lossless format, the compression factor (100) is ignored
+
+            return String.valueOf(file);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public Bitmap readImageFromPath(String path) {
+        Bitmap bmp = BitmapFactory.decodeFile(path);
+        return bmp;
+    }
+
+
 }

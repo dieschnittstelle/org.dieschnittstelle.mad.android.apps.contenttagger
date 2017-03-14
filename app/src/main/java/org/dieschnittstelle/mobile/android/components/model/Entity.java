@@ -78,6 +78,10 @@ public abstract class Entity {
         }
     }
 
+    public void removePendingUpdate(Entity e) {
+        this.pendingUpdates.remove(e);
+    }
+
     public Entity() {
 
     }

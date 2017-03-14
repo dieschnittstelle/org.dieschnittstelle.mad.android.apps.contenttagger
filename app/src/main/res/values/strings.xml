@@ -50,6 +50,8 @@
     <string name="action_sort">Sort</string>
     <string name="title_delete_taggable" >Delete Item</string>
     <string name="title_save_taggable" >Save Item</string>
+    <string name="action_show_attachments" >Show attached media</string>
+    <string name="action_hide_attachments" >Hide attached media</string>
     <string name="message_feedback_delete_taggable_ok" >#%s has been deleted.</string>
     <string name="message_feedback_delete_taggable_nok" >#%s could not be deleted.</string>
     <string name="message_feedback_save_taggable_ok" >#%s has been saved.</string>

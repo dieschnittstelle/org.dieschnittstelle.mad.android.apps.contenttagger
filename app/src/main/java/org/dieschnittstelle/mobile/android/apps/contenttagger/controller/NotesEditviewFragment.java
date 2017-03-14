@@ -3,6 +3,7 @@ package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -124,7 +125,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
 //                ((ActionBarActivity) getActivity()).setTitle(R.string.title_edit_note);
                 // read all notes - reaction will be dealt with by event handler
                 Note.read(Note.class, noteId, this);
-            } else {
+            } else if (note == null) {
                 ((ActionBarActivity) getActivity()).setTitle(R.string.title_create_note);
                 note = new Note();
                 // this is required in order for the tagbar to be available for new notes
@@ -147,9 +148,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
 
         Log.i(logger, "onPause(): saved: " + this.saved);
         if (!(this instanceof NotesReadviewFragment)) {
-            // unbinding will prevent errors due to event handlers provoking a termination of this fragment themselves
-            EventDispatcher.getInstance().unbindController(this);
-            if (!saved) {
+            if (!saved && pendingRequestCode == -1) {
                 // set saved manually as the event handlers will not react
                 saved = true;
                 createOrUpdateNote();
@@ -188,7 +187,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
 
         // TODO: tagsbarController could be refactored such that reading out the tagsbar will be encapsulated therein
         this.tagsbarController = new TagsbarController(this,(ViewGroup)contentView.findViewById(R.id.tagsbar),R.layout.tagsbar_itemview);
-        this.attachmentsController = new AttachmentsPanelController(getActivity(),contentView);
+        this.attachmentsController = new AttachmentsPanelController(this,contentView);
 
         return contentView;
     }
@@ -243,9 +242,10 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
                                 protected Taggable doInBackground(Taggable... params) {
                                     // TODO: sync operations do not trigger event listeners, this could be changed at some moment...
                                     if (params[0].created()) {
-                                        params[0].deleteSync();
-                                        // but we can trigger an event ourselves...
-                                        EventDispatcher.getInstance().notifyListeners(new Event(Event.CRUD.TYPE, Event.CRUD.DELETED, params[0].getClass(), null, params[0]));
+                                        params[0].delete();
+//                                        params[0].deleteSync();
+//                                        // but we can trigger an event ourselves...
+//                                        EventDispatcher.getInstance().notifyListeners(new Event(Event.CRUD.TYPE, Event.CRUD.DELETED, params[0].getClass(), null, params[0]));
                                         return params[0];
                                     }
                                     else {
@@ -330,5 +330,22 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
         }).show(taggable);
     }
 
+    // we need to track whether we are pending to receive a result in order to distinguish whether onPause() is forward-leaving or backward-leaving
+    private int pendingRequestCode = -1;
 
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode) {
+        this.pendingRequestCode = requestCode;
+        super.startActivityForResult(intent, requestCode);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        this.pendingRequestCode = -1;
+        if (attachmentsController.handlesResult(requestCode)) {
+            attachmentsController.onActivityResult(requestCode,resultCode,data);
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 }

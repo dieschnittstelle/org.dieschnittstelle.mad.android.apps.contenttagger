@@ -1,5 +1,7 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.model;
 
+import android.util.Log;
+
 import com.orm.dsl.Ignore;
 
 import org.dieschnittstelle.mobile.android.components.model.Entity;
@@ -69,19 +71,40 @@ public abstract class Taggable extends Entity {
 
     @Override
     public void preDestroy() {
+        Log.i(logger,"preDestroy(): " + this);
+
         // before a taggable is removed we remove all associations
         for (Tag tag : this.tags) {
-            tag.getTaggedItems().remove(this);
-            addPendingUpdate(tag);
+            if (tag != null) {
+                tag.getTaggedItems().remove(this);
+                addPendingUpdate(tag);
+            }
         }
         for (Taggable attachment : this.attachments) {
-            attachment.removeAttacher(this);
-            addPendingUpdate(attachment);
+            if (attachment != null) {
+                attachment.removeAttacher(this);
+                addPendingUpdate(attachment);
+            }
         }
         for (Taggable attacher : this.attachers) {
-            attacher.removeAttachment(this);
-            addPendingUpdate(attacher);
+            if (attacher != null) {
+                attacher.removeAttachment(this);
+                addPendingUpdate(attacher);
+            }
         }
+
+        // TODO: cascade deletion to attachments in case they do not have any further attacher
+        for (Taggable attachment : this.attachments) {
+            if (attachment.getAttachers().size() == 0 && (attachment.getTitle() == null || attachment.getTitle().trim().length() == 0)) {
+                Log.i(logger,"preDestroy(): will also delete attachment: " + attachment);
+                removePendingUpdate(attachment);
+                attachment.delete();
+            }
+            else {
+                Log.i(logger,"preDestroy(): will not delete attachment: " + attachment);
+            }
+        }
+
     }
 
     public void setTags(List<Tag> tags) {
