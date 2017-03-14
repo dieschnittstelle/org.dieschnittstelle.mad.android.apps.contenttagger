@@ -163,11 +163,11 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
         note.setContent(this.content.getText().toString());
 
         if (this.note.created()) {
-            Log.i(logger,"onPause(): updating note");
+            Log.i(logger,"createOrUpdateNote(): updating note");
             this.note.update();
         }
         else {
-            Log.i(logger,"onPause(): creating note");
+            Log.i(logger,"createOrUpdateNote(): creating note");
             this.note.create();
         }
     }
@@ -188,7 +188,7 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
 
         // TODO: tagsbarController could be refactored such that reading out the tagsbar will be encapsulated therein
         this.tagsbarController = new TagsbarController(this,(ViewGroup)contentView.findViewById(R.id.tagsbar),R.layout.tagsbar_itemview);
-        this.attachmentsController = new AttachmentsPanelController(contentView);
+        this.attachmentsController = new AttachmentsPanelController(getActivity(),contentView);
 
         return contentView;
     }

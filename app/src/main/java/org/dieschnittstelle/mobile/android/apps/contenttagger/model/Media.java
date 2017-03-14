@@ -1,5 +1,7 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.model;
 
+import android.graphics.Bitmap;
+
 import com.orm.dsl.Ignore;
 import com.orm.dsl.Table;
 
@@ -34,6 +36,9 @@ public class Media extends Taggable implements Serializable {
     private Long id;
 
     private String associations;
+
+    @Ignore
+    private Bitmap thumbnail;
 
     public Media() {
 
@@ -120,5 +125,11 @@ public class Media extends Taggable implements Serializable {
         super.update();
     }
 
+    public Bitmap getThumbnail() {
+        return thumbnail;
+    }
 
+    public void setThumbnail(Bitmap thumbnail) {
+        this.thumbnail = thumbnail;
+    }
 }

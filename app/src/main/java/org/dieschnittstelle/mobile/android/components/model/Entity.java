@@ -1,6 +1,7 @@
 package org.dieschnittstelle.mobile.android.components.model;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.orm.dsl.Ignore;
@@ -129,33 +130,90 @@ public abstract class Entity {
      */
 
     public void create(final EventGenerator context) {
-        // here, we need to pass a callback in order to avoid that pending updates are created before an id has been set
-        EntityManager.getInstance().create(this.getClass(), this, context, new EntityManager.CRUDCallback() {
+        // creation needs to be done in three steps:
+        // 1) create the entity
+        // 2) handle pending updates (which might result in the creation of associated entities)
+        // 3) update the entity
+
+        // 1)
+        EntityManager.getInstance().create(Entity.this.getClass(), Entity.this, context, new EntityManager.CRUDCallback() {
             @Override
             public void onCRUDCompleted() {
-                // handle the pending updates
-                handlePendingUpdates(context);
+                // 2)
+                Log.i(logger,"create(): creation done. Now handling pending updates...");
+                handlePendingUpdates(context, new EntityManager.CRUDCallback() {
+                    @Override
+                    public void onCRUDCompleted() {
+                        // 3)
+                        Log.i(logger,"create(): pending updates dones. Now updating myself: " + Entity.this);
+                        Entity.this.update(context);
+                    }
+                });
+            }
+        });
+        // here, we need to pass a callback in order to avoid that pending updates are created before an id has been set
+    }
+
+
+
+    public void update(final EventGenerator context) {
+        handlePendingUpdates(context, new EntityManager.CRUDCallback() {
+            @Override
+            public void onCRUDCompleted() {
+                Log.i(logger,"update(): pending updates dones. Now updating myself: " + Entity.this);
+                EntityManager.getInstance().update(Entity.this.getClass(), Entity.this, context);
             }
         });
     }
 
+//    private void handlePendingUpdates(EventGenerator context) {
+//        if (this.pendingUpdates.size() > 0) {
+//        Log.i(logger,"handlePendingUpdates(): handling " + this.pendingUpdates.size() + " pending updates for entity: " + this);
+//            for (Entity e : this.pendingUpdates) {
+//                if (!e.created()) {
+//                    Log.i(logger,"entity contained in pendingUpdates has not been created yet: " + e);
+//                }
+//                e.update(context);
+//            }
+//            this.pendingUpdates.clear();
+//        }
+//        else {
+//            Log.d(logger,"handlePendingUpdates(): no pending updates exist for entity: " + this);
+//        }
+//    }
 
-
-    public void update(EventGenerator context) {
-        EntityManager.getInstance().update(this.getClass(), this, context);
-        handlePendingUpdates(context);
-    }
-
-    private void handlePendingUpdates(EventGenerator context) {
+    private void handlePendingUpdates(final EventGenerator context, final EntityManager.CRUDCallback callback) {
+        Log.i(logger,"handlePendingUpdates()");
         if (this.pendingUpdates.size() > 0) {
-        Log.i(logger,"handlePendingUpdates(): handling " + this.pendingUpdates.size() + " pending updates for entity: " + this);
-            for (Entity e : this.pendingUpdates) {
-                e.update(context);
-            }
-            this.pendingUpdates.clear();
+            // we run this in an asyncTask to avoid synchronisation issues if pending updates relate to entities that have not been created so far
+            new AsyncTask<Void, Void, Boolean>() {
+
+                @Override
+                protected Boolean doInBackground(Void... voids) {
+                    Log.i(logger,"handlePendingUpdates(): handling " + Entity.this.pendingUpdates.size() + " pending updates for entity: " + this);
+                    for (Entity e : Entity.this.pendingUpdates) {
+                        // TODO: note that we basically support creation of associated entities, but not recursively... and also note that createSync() will not trigger event handlers!
+                        if (!e.created()) {
+                            Log.i(logger,"entity contained in pendingUpdates has not been created yet: " + e);
+                            e.createSync();
+                        }
+                        else {
+                            e.update(context);
+                        }
+                    }
+                    Entity.this.pendingUpdates.clear();
+                    return true;
+                }
+
+                @Override
+                protected void onPostExecute(Boolean aBoolean) {
+                    callback.onCRUDCompleted();
+                }
+            }.execute();
         }
         else {
             Log.d(logger,"handlePendingUpdates(): no pending updates exist for entity: " + this);
+            callback.onCRUDCompleted();
         }
     }
 
@@ -165,7 +223,12 @@ public abstract class Entity {
     public void delete(EventGenerator context) {
         preDestroy();
         EntityManager.getInstance().delete(this.getClass(), this, context);
-        handlePendingUpdates(context);
+        handlePendingUpdates(context, new EntityManager.CRUDCallback() {
+            @Override
+            public void onCRUDCompleted() {
+                Log.i(logger,"delete(): done for " + Entity.this);
+            }
+        });
     }
 
     public static Entity read(Class<? extends Entity> entityClass,long id, EventGenerator context) {

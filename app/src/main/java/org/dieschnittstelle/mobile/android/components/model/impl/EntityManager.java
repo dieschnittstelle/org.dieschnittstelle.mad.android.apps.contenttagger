@@ -106,6 +106,7 @@ public class EntityManager implements EntityCRUDOperations {
     public void create(final Class<? extends Entity> entityClass, final Entity e, final EventGenerator context, final CRUDCallback callback) {
         Log.d(logger, "create()");
         if (runEntityCRUDAsync(entityClass)) {
+            Log.d(logger,"createAsync()");
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -135,6 +136,7 @@ public class EntityManager implements EntityCRUDOperations {
     public void update(final Class<? extends Entity> entityClass, final Entity e, final EventGenerator context, final CRUDCallback callback) {
         Log.d(logger, "update()");
         if (runEntityCRUDAsync(entityClass)) {
+            Log.d(logger,"updateAsync()");
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -163,6 +165,7 @@ public class EntityManager implements EntityCRUDOperations {
 
     public boolean delete(final Class<? extends Entity> entityClass, final Entity e, final EventGenerator context, final CRUDCallback callback) {
         if (runEntityCRUDAsync(entityClass)) {
+            Log.d(logger,"deleteAsync()");
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -195,6 +198,7 @@ public class EntityManager implements EntityCRUDOperations {
 
     public Entity read(final Class<? extends Entity> entityClass, final long id, final EventGenerator context) {
         if (runEntityCRUDAsync(entityClass)) {
+            Log.d(logger,"readAsync()");
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -228,6 +232,7 @@ public class EntityManager implements EntityCRUDOperations {
 
     public List<Entity> readAll(final Class<? extends Entity> entityClass, final EventGenerator context) {
         if (runEntityCRUDAsync(entityClass)) {
+            Log.d(logger,"readAllAsync()");
             new Thread(new Runnable() {
                 @Override
                 public void run() {

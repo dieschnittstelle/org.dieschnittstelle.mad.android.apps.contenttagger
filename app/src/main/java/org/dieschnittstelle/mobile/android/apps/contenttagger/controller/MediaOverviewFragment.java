@@ -88,10 +88,14 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
         eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.READALL, Media.class, this), false, new EventListener<List<Media>>() {
             @Override
             public void onEvent(Event<List<Media>> event) {
+                List<Media> selected = new ArrayList<Media>();
                 for (Media media : event.getData()) {
-                    Log.i(logger, "found tags on note: " + media.getTags());
+                    // we only display those media items that have not been created as attachments - TODO: rethink this at some moment
+                    if (media.getAttachers().size() == 0) {
+                        selected.add(media);
+                    }
                 }
-                adapter.addItems(event.getData());
+                adapter.addItems(selected);
             }
         });
 

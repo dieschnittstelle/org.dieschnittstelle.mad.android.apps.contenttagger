@@ -89,7 +89,7 @@ public abstract class Taggable extends Entity {
     }
 
     public void addAttachment(Taggable attachment) {
-        if (!this.attachments.contains(attachment)) {
+        if (!this.attachments.contains(attachment) && attachment != this) {
             this.attachments.add(attachment);
             attachment.addAttacher(this);
             addPendingUpdate(attachment);
@@ -110,7 +110,9 @@ public abstract class Taggable extends Entity {
      * bidirectionality attachment-attachers will be handled by methods for attachment (see above)
      */
     public void addAttacher(Taggable attacher) {
-        this.attachers.add(attacher);
+        if (!this.attachers.contains(attacher)) {
+            this.attachers.add(attacher);
+        }
     }
 
     public void removeAttacher(Taggable attacher) {
