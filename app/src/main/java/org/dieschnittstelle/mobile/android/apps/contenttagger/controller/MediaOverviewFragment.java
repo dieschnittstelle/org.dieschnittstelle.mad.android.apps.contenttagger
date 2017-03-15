@@ -3,7 +3,6 @@ package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.RecyclerView;
@@ -18,7 +17,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
-import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Link;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
 import org.dieschnittstelle.mobile.android.components.controller.EntityListAdapter;
 import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
@@ -126,7 +124,7 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
                 }
 
                 @Override
-                public void onBindEntityViewHolder(final MediaListItemViewHolder holder, final Media entity, int position) {
+                public void onBindEntityViewHolder(final MediaListItemViewHolder holder, final Media entity, final int position) {
                     Log.d(logger,"onBindEntityViewHolder(): id is: " + entity.getId());
 
                     boolean attachedMedia = ((entity.getTitle() == null || entity.getTitle().trim().length() == 0) && entity.getAttachers().size() > 0);
@@ -145,9 +143,9 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
                     }
 
                     if (entity.getContentUri() != null) {
-                        entity.createThumbnail(getActivity(), new Media.OnThumbnailCreatedHandler() {
+                        entity.loadThumbnail(getActivity(), new Media.OnImageLoadedHandler() {
                             @Override
-                            public void onThumbnailCreated(Bitmap thumbnail) {
+                            public void onImageLoaded(Bitmap thumbnail) {
                                 holder.mediaContent.setImageBitmap(thumbnail);
                             }
                         });
@@ -160,6 +158,20 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
                         holder.numOfTags.setVisibility(View.VISIBLE);
                     }
                     holder.numOfTags.setText(String.valueOf(numOfTags));
+
+                    holder.mediaContent.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            // we open the pager fragment
+                            Bundle args = MainNavigationControllerActivity.createArguments(MediaPagerFragment.ARG_SELECTED_MEDIA_POS,position);
+                            List<Long> mediaIds = new ArrayList<Long>();
+                            for (int i=0;i< adapter.getItemCount();i++) {
+                                mediaIds.add(adapter.getItemAt(i).getId());
+                            }
+                            args.putSerializable(MediaPagerFragment.ARG_DISPLAY_MEDIA,(ArrayList)mediaIds);
+                            ((MainNavigationControllerActivity) getActivity()).showView(MediaPagerFragment.class, args, true);
+                        }
+                    });
                 }
 
                 @Override

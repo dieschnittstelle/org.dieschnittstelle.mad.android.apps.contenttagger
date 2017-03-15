@@ -295,6 +295,14 @@ public class MainNavigationControllerActivity extends ActionBarActivity implemen
         return bun;
     }
 
+    public static Bundle createArguments(String key,int value) {
+        Log.d(logger,"createArguments(): " + key + "=" + value);
+        Bundle bun = new Bundle();
+        bun.putInt(key, value);
+
+        return bun;
+    }
+
 
     /*
      * the following methods are taken over from the android developer doc

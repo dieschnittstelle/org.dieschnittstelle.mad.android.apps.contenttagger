@@ -109,6 +109,10 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
         return this.entities.size();
     }
 
+    public E getItemAt(int pos) {
+        return this.entities.get(pos);
+    }
+
     /************************************************************
      * the view holder
      ************************************************************/

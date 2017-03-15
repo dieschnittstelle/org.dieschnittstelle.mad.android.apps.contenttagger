@@ -3,12 +3,9 @@ package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -175,8 +172,15 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
 
         this.title = (EditText)contentView.findViewById(R.id.title);
         this.mediaContent = (ImageView)contentView.findViewById(R.id.mediaContent);
-
         this.tagsbarController = new TagsbarController(this,(ViewGroup)contentView.findViewById(R.id.tagsbar),R.layout.tagsbar_itemview);
+
+        // set a listener on the media content element
+        this.mediaContent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showPhotoInPhotoApp(Uri.parse(media.getContentUri()));
+            }
+        });
 
         return contentView;
     }
@@ -228,12 +232,20 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
             Uri selectedImage = data.getData();
             this.media.setContentUri(selectedImage.toString());
             this.media.setContentType(Media.ContentType.LOCALURI);
-            this.media.createThumbnail(this.getActivity(), new Media.OnThumbnailCreatedHandler() {
+            this.media.loadThumbnail(this.getActivity(), new Media.OnImageLoadedHandler() {
                 @Override
-                public void onThumbnailCreated(Bitmap thumbnail) {
+                public void onImageLoaded(Bitmap thumbnail) {
                     MediaEditviewFragment.this.mediaContent.setImageURI(Uri.parse(media.getContentUri()));
                 }
             });
         }
     }
+
+    private void showPhotoInPhotoApp(Uri photoUri){
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(photoUri, "image/*");
+        startActivity(intent);
+    }
+
 }

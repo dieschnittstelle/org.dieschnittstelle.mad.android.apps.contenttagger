@@ -1,14 +1,12 @@
 package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.View;
@@ -20,8 +18,8 @@ import android.widget.ImageView;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Taggable;
+import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +29,7 @@ import java.util.List;
  * <p>
  * encapsulates control of an attachments panel which allows to associate taggables with taggables, starting with media
  * for using gridview see https://developer.android.com/guide/topics/ui/layout/gridview.html
- *
+ * <p>
  * for drag&drop handling, see: https://blahti.wordpress.com/2011/10/03/drag-drop-for-android-gridview/
  * TODO: for creating a gallery, see: https://inducesmile.com/android/android-slideshow-using-viewpager-and-page-indicator-example/
  */
@@ -148,7 +146,7 @@ public class AttachmentsPanelController {
         }
 
         // create a new ImageView for each item referenced by the Adapter
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
             Log.i(logger, "getView(): position: " + position);
 
             final ImageView imageView;
@@ -162,10 +160,25 @@ public class AttachmentsPanelController {
                 imageView = (ImageView) convertView;
             }
 
-            Media mediaItem = items.get(position);
-            mediaItem.createThumbnail(owner.getActivity(), new Media.OnThumbnailCreatedHandler() {
+            // set a listener on the imageView
+            imageView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onThumbnailCreated(Bitmap thumbnail) {
+                public void onClick(View view) {
+                    Bundle args = MainNavigationControllerActivity.createArguments(MediaPagerFragment.ARG_SELECTED_MEDIA_POS, position);
+                    List<Long> mediaIds = new ArrayList<Long>();
+                    for (int i = 0; i < getCount(); i++) {
+                        mediaIds.add(((Media)getItem(i)).getId());
+                    }
+                    args.putSerializable(MediaPagerFragment.ARG_DISPLAY_MEDIA, (ArrayList) mediaIds);
+                    ((MainNavigationControllerActivity) owner.getActivity()).showView(MediaPagerFragment.class, args, true);
+
+                }
+            });
+
+            Media mediaItem = items.get(position);
+            mediaItem.loadThumbnail(owner.getActivity(), new Media.OnImageLoadedHandler() {
+                @Override
+                public void onImageLoaded(Bitmap thumbnail) {
                     imageView.setImageBitmap(thumbnail);
                 }
             });
@@ -180,7 +193,7 @@ public class AttachmentsPanelController {
 
         public void addItems(Collection<Media> media) {
             if (media.size() > 0) {
-                Log.i(logger,"addItems(): thumbnail on 1st element of media list is: " + media.iterator().next().getThumbnail());
+                Log.i(logger, "addItems(): thumbnail on 1st element of media list is: " + media.iterator().next().getThumbnail());
             }
             this.items.addAll(media);
             super.notifyDataSetChanged();
