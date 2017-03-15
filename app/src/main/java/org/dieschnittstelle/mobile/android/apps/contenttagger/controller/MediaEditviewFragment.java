@@ -32,6 +32,8 @@ import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
 
 /**
  * Created by master on 17.03.16.
+ *
+ * TODO: allow to edit images in Photo-App onclick of the ImageView
  */
 public class MediaEditviewFragment extends Fragment implements EventGenerator, EventListenerOwner {
 

@@ -33,6 +33,8 @@ import java.util.Date;
 
 /**
  * Created by master on 14.03.16.
+ *
+ * for database import see: http://www.javahelps.com/2015/04/import-and-use-external-database-in.html?m=1
  */
 // a local application class that instantiates the entity manager
 public class ContentTaggerApplication extends com.orm.SugarApp implements SendActionDispatcher {
