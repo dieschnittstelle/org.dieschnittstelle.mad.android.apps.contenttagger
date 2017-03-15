@@ -33,7 +33,7 @@ import java.util.List;
  * for using gridview see https://developer.android.com/guide/topics/ui/layout/gridview.html
  *
  * for drag&drop handling, see: https://blahti.wordpress.com/2011/10/03/drag-drop-for-android-gridview/
- * for creating a gallery, see: https://inducesmile.com/android/android-slideshow-using-viewpager-and-page-indicator-example/
+ * TODO: for creating a gallery, see: https://inducesmile.com/android/android-slideshow-using-viewpager-and-page-indicator-example/
  */
 public class AttachmentsPanelController {
 
