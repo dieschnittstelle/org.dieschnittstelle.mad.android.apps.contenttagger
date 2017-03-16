@@ -396,7 +396,11 @@ public class Media extends Taggable implements Serializable {
 //    }
 
     public Bitmap extractThumbnail(Bitmap orig,Context context) {
-        Bitmap thumb = ThumbnailUtils.extractThumbnail(orig,THUMBNAIL_WIDTH,THUMBNAIL_HEIGHT);
+        float ratio = (float)orig.getWidth() / (float) orig.getHeight();
+
+        int height = (int)(THUMBNAIL_WIDTH/ratio);
+        Log.i(logger,"extractThumbnail: " + THUMBNAIL_WIDTH + "/" + height);
+        Bitmap thumb = ThumbnailUtils.extractThumbnail(orig,THUMBNAIL_WIDTH,height);
         String path = "/thumbnails/"+System.currentTimeMillis() + ".bmp";
         String writtenPath = writeImageToPath(thumb,path,context);
         this.setThumbnailPath(writtenPath);

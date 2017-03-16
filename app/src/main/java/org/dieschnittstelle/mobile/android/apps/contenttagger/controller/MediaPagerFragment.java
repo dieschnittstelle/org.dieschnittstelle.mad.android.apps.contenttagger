@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -36,7 +37,7 @@ import java.util.List;
  * Created by master on 15.03.17.
  * <p>
  * this follows https://inducesmile.com/android/android-slideshow-using-viewpager-and-page-indicator-example/
- *
+ * <p>
  * TODO: there are still issues related to low memory and selecting pages from the buttons rather by paging - there is a critical number for ImageViews being active at the same time, i.e. problems are not caused by repeatedly loading images
  */
 public class MediaPagerFragment extends Fragment implements EventGenerator, EventListenerOwner {
@@ -73,7 +74,7 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
 
         public RecycleableImageViewHolder(int id, ImageView view) {
             this.view = view;
-            view.setTag(R.string.tag_viewholder_id,id);
+            view.setTag(R.string.tag_viewholder_id, id);
         }
     }
 
@@ -96,6 +97,7 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
 
             return useView.view;
         }
+//        return (ImageView) inflater.inflate(R.layout.media_pager_itemview_image, null);
     }
 
     private void releaseRecycleableImageView(ImageView view) {
@@ -137,13 +139,13 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
         inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         // we expect to receive a list of ids for the media that shall be loaded and optionally a position which we will be displayed first
-        displayMediaIdList = (List<Long>)getArguments().get(ARG_DISPLAY_MEDIA);
+        displayMediaIdList = (List<Long>) getArguments().get(ARG_DISPLAY_MEDIA);
         if (getArguments().containsKey(ARG_SELECTED_MEDIA_POS)) {
             selectedMediaPos = getArguments().getInt(ARG_SELECTED_MEDIA_POS);
         }
 
         // we load two instances of the image layout
-        for (int i = 0; i< RECYCLER_CAPACITY_INITIAL; i++) {
+        for (int i = 0; i < RECYCLER_CAPACITY_INITIAL; i++) {
             addRecycleaebleImageView();
         }
     }
@@ -156,13 +158,13 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
         pagerControls = (RadioGroup) contentView.findViewById(R.id.radiogroup);
 
         // we load all media from the list
-        new AsyncTask<Void,Void,List<Media>>() {
+        new AsyncTask<Void, Void, List<Media>>() {
 
             @Override
             protected List<Media> doInBackground(Void... voids) {
                 List<Media> loaded = new ArrayList<Media>();
                 for (Long id : displayMediaIdList) {
-                    loaded.add((Media)Media.readSync(Media.class,id));
+                    loaded.add((Media) Media.readSync(Media.class, id));
                 }
                 return loaded;
             }
@@ -207,7 +209,7 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
             ImageView mediaContent = (ImageView) container.findViewById(R.id.mediaContent);
             releaseRecycleableImageView(mediaContent);
             mediaContentContainer.removeView(mediaContent);
-            container.removeView((View)object);
+            container.removeView((View) object);
         }
 
         @Override
@@ -219,11 +221,20 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
 
             final ImageView mediaContent = bindReycleableImageViewForPosition(position);
 
-            final View loadPlaceholder = mediaContentContainer.findViewById(R.id.loadPlaceholder);
+            final View loadPlaceholder = view.findViewById(R.id.loadPlaceholder);
 
             if (mediaContent != null) {
                 loadPlaceholder.setVisibility(View.VISIBLE);
                 mediaContentContainer.addView(mediaContent);
+
+                // set a thumbnail first
+                media.loadThumbnail(context, new Media.OnImageLoadedHandler() {
+                    public void onImageLoaded(Bitmap image) {
+                        Log.i(logger,"onerror(): setting thumbnail on image: " + ((image == null ) ? "null" : "<bitmap>"));
+                        mediaContent.setImageBitmap(image);
+                    }
+                });
+
                 // use a manually controlled placeholder animation as shown in http://stackoverflow.com/questions/24826459/animated-loading-image-in-picasso
                 Picasso.with(context).load(Uri.parse(media.getContentUri())).into(mediaContent, new Callback() {
                     @Override
@@ -238,13 +249,6 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
 
                 });
 
-//                media.loadThumbnail(context, new Media.OnImageLoadedHandler() {
-//                    @Override
-//                    public void onImageLoaded(Bitmap image) {
-//                        mediaContent.setImageBitmap(image);
-//                        mediaContentContainer.addView(mediaContent);
-//                    }
-//                });
             }
 
             // addView() needs to be run on the UI Thread
@@ -326,13 +330,12 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
 
     // for some reason, automatic checking/unchecking does not work for these dynamically added radios
     public void updateRadioGroup(int selected) {
-        for (int i=0;i<pagerControls.getChildCount();i++) {
+        for (int i = 0; i < pagerControls.getChildCount(); i++) {
             if (pagerControls.getChildAt(i) instanceof RadioButton) {
                 if (i == selected) {
-                    ((RadioButton)pagerControls.getChildAt(i)).setChecked(true);
-                }
-                else {
-                    ((RadioButton)pagerControls.getChildAt(i)).setChecked(false);
+                    ((RadioButton) pagerControls.getChildAt(i)).setChecked(true);
+                } else {
+                    ((RadioButton) pagerControls.getChildAt(i)).setChecked(false);
                 }
             }
         }
