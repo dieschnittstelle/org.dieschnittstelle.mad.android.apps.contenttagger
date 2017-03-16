@@ -24,6 +24,7 @@ import java.util.Comparator;
  * Created by master on 15.03.16.
  *
  * for bitmap handling, look into: https://developer.android.com/topic/performance/graphics/index.html
+ * we rather use Picasso for image loading: http://square.github.io/picasso/ - image loading implemented here is obsolete
  */
 @Table
 public class Media extends Taggable implements Serializable {
@@ -59,8 +60,8 @@ public class Media extends Taggable implements Serializable {
     @Ignore
     private Bitmap thumbnail;
 
-    @Ignore
-    private Bitmap image;
+//    @Ignore
+//    private Bitmap image;
 
     private String thumbnailPath;
 
@@ -182,58 +183,58 @@ public class Media extends Taggable implements Serializable {
 
     }
 
-    /*
-     * load a thumbnail
-     */
-    public void loadThumbnailNew(final Context context, final OnImageLoadedHandler callback) {
-        if (this.thumbnail != null) {
-            Log.i(logger,"loadThumbnail(): thumbnail has been created already");
-            callback.onImageLoaded(this.thumbnail);
-        }
-        else if (this.thumbnailPath != null) {
-            Log.i(logger,"loadThumbnail(): load thumbnail from local path: " + this.thumbnailPath);
-
-            new AsyncTask<Void,Void,Bitmap>() {
-
-                @Override
-                protected Bitmap doInBackground(Void... voids) {
-                    return readImageFromPath(Media.this.thumbnailPath);
-                }
-
-                @Override
-                protected void onPostExecute(Bitmap bitmap) {
-                    callback.onImageLoaded(bitmap);
-                }
-
-            }.execute();
-
-        }
-        else {
-            Log.i(logger,"loadThumbnail(): load image and try to convert it");
-            loadImage(context, new OnImageLoadedHandler() {
-                @Override
-                public void onImageLoaded(final Bitmap image) {
-                    new AsyncTask<Void,Void,Bitmap>() {
-
-                        @Override
-                        protected Bitmap doInBackground(Void... voids) {
-                            if (image != null) {
-                                return extractThumbnail(image, context);
-                            }
-                            return null;
-                        }
-
-                        @Override
-                        protected void onPostExecute(Bitmap bitmap) {
-                            callback.onImageLoaded(bitmap);
-                        }
-
-                    }.execute();
-                }
-            });
-        }
-    }
-
+//    /*
+//     * load a thumbnail
+//     */
+//    public void loadThumbnailNew(final Context context, final OnImageLoadedHandler callback) {
+//        if (this.thumbnail != null) {
+//            Log.i(logger,"loadThumbnail(): thumbnail has been created already");
+//            callback.onImageLoaded(this.thumbnail);
+//        }
+//        else if (this.thumbnailPath != null) {
+//            Log.i(logger,"loadThumbnail(): load thumbnail from local path: " + this.thumbnailPath);
+//
+//            new AsyncTask<Void,Void,Bitmap>() {
+//
+//                @Override
+//                protected Bitmap doInBackground(Void... voids) {
+//                    return readImageFromPath(Media.this.thumbnailPath);
+//                }
+//
+//                @Override
+//                protected void onPostExecute(Bitmap bitmap) {
+//                    callback.onImageLoaded(bitmap);
+//                }
+//
+//            }.execute();
+//
+//        }
+//        else {
+//            Log.i(logger,"loadThumbnail(): load image and try to convert it");
+//            loadImage(context, new OnImageLoadedHandler() {
+//                @Override
+//                public void onImageLoaded(final Bitmap image) {
+//                    new AsyncTask<Void,Void,Bitmap>() {
+//
+//                        @Override
+//                        protected Bitmap doInBackground(Void... voids) {
+//                            if (image != null) {
+//                                return extractThumbnail(image, context);
+//                            }
+//                            return null;
+//                        }
+//
+//                        @Override
+//                        protected void onPostExecute(Bitmap bitmap) {
+//                            callback.onImageLoaded(bitmap);
+//                        }
+//
+//                    }.execute();
+//                }
+//            });
+//        }
+//    }
+//
     /*
     * this covers
     */
@@ -319,80 +320,80 @@ public class Media extends Taggable implements Serializable {
         }
     }
 
-    public void releaseImage() {
-        if (this.image != null) {
-            this.image.recycle();
-            this.image = null;
-        }
-    }
+//    public void releaseImage() {
+//        if (this.image != null) {
+//            this.image.recycle();
+//            this.image = null;
+//        }
+//    }
 
-    /*
-    * load the original image
-    */
-    public void loadImage(final Context context, final OnImageLoadedHandler callback) {
-        if (this.image != null) {
-            callback.onImageLoaded(this.image);
-        }
-        else if (this.contentType == ContentType.EXTURI) {
-            new AsyncTask<Void, Void, Bitmap>() {
-
-                @Override
-                protected Bitmap doInBackground(Void... voids) {
-                    Log.i(logger, "loadImage(): loading image data for media item with url: " + Media.this.getContentUri());
-                    try {
-                        URL url = new URL(Media.this.getContentUri());
-                        Bitmap orig = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-//                        image = orig;
-                        return orig;
-                    } catch (Exception e) {
-                        Log.e(logger, "loadImage(): got exception trying to load media: " + e, e);
-                        return null;
-                    }
-                }
-
-                @Override
-                protected void onPostExecute(Bitmap bitmap) {
-                    callback.onImageLoaded(bitmap);
-                }
-
-            }.execute();
-
-        }
-        else if (this.contentType == ContentType.LOCALURI) {
-            new AsyncTask<Void,Void,Bitmap>() {
-
-                @Override
-                protected Bitmap doInBackground(Void... voids) {
-                    try {
-                        Log.i(logger,"loadImage(): will load local data and create thumbnail...");
-                        // see https://developer.android.com/guide/topics/providers/document-provider.html
-                        ParcelFileDescriptor parcelFileDescriptor =
-                                context.getContentResolver().openFileDescriptor(Uri.parse(Media.this.getContentUri()), "r");
-                        FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-                        Bitmap orig = BitmapFactory.decodeFileDescriptor(fileDescriptor);
-                        parcelFileDescriptor.close();
-//                        image = orig;
-                        return orig;
-                    }
-                    catch (Exception e) {
-                        Log.e(logger,"loadImage(): got an exception trying to read data from local uri: " + e,e);
-                        return null;
-                    }
-                }
-
-                @Override
-                protected void onPostExecute(Bitmap bitmap) {
-                    callback.onImageLoaded(bitmap);
-                }
-
-            }.execute();
-
-        }
-        else {
-            Log.e(logger,"loadThumbnail(): contentType not supported: " + this.contentType);
-            callback.onImageLoaded(null);
-        }
-    }
+//    /*
+//    * load the original image
+//    */
+//    public void loadImage(final Context context, final OnImageLoadedHandler callback) {
+//        if (this.image != null) {
+//            callback.onImageLoaded(this.image);
+//        }
+//        else if (this.contentType == ContentType.EXTURI) {
+//            new AsyncTask<Void, Void, Bitmap>() {
+//
+//                @Override
+//                protected Bitmap doInBackground(Void... voids) {
+//                    Log.i(logger, "loadImage(): loading image data for media item with url: " + Media.this.getContentUri());
+//                    try {
+//                        URL url = new URL(Media.this.getContentUri());
+//                        Bitmap orig = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+////                        image = orig;
+//                        return orig;
+//                    } catch (Exception e) {
+//                        Log.e(logger, "loadImage(): got exception trying to load media: " + e, e);
+//                        return null;
+//                    }
+//                }
+//
+//                @Override
+//                protected void onPostExecute(Bitmap bitmap) {
+//                    callback.onImageLoaded(bitmap);
+//                }
+//
+//            }.execute();
+//
+//        }
+//        else if (this.contentType == ContentType.LOCALURI) {
+//            new AsyncTask<Void,Void,Bitmap>() {
+//
+//                @Override
+//                protected Bitmap doInBackground(Void... voids) {
+//                    try {
+//                        Log.i(logger,"loadImage(): will load local data and create thumbnail...");
+//                        // see https://developer.android.com/guide/topics/providers/document-provider.html
+//                        ParcelFileDescriptor parcelFileDescriptor =
+//                                context.getContentResolver().openFileDescriptor(Uri.parse(Media.this.getContentUri()), "r");
+//                        FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+//                        Bitmap orig = BitmapFactory.decodeFileDescriptor(fileDescriptor);
+//                        parcelFileDescriptor.close();
+////                        image = orig;
+//                        return orig;
+//                    }
+//                    catch (Exception e) {
+//                        Log.e(logger,"loadImage(): got an exception trying to read data from local uri: " + e,e);
+//                        return null;
+//                    }
+//                }
+//
+//                @Override
+//                protected void onPostExecute(Bitmap bitmap) {
+//                    callback.onImageLoaded(bitmap);
+//                }
+//
+//            }.execute();
+//
+//        }
+//        else {
+//            Log.e(logger,"loadThumbnail(): contentType not supported: " + this.contentType);
+//            callback.onImageLoaded(null);
+//        }
+//    }
 
     public Bitmap extractThumbnail(Bitmap orig,Context context) {
         Bitmap thumb = ThumbnailUtils.extractThumbnail(orig,THUMBNAIL_WIDTH,THUMBNAIL_HEIGHT);

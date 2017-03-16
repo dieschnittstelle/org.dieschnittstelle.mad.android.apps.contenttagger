@@ -61,4 +61,6 @@
     <string name="action_pick">Bild auswählen</string>
     <string name="title_edit_place">Place</string>
     <string name="title_create_place">New Place</string>
+    <!-- a constant for a tag set on imageView -->
+    <string name="tag_viewholder_id">viewHolderId</string>
 </resources>
