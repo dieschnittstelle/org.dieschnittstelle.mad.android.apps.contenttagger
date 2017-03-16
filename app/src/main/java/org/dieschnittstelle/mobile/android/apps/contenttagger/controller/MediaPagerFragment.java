@@ -37,7 +37,7 @@ import java.util.List;
  * <p>
  * this follows https://inducesmile.com/android/android-slideshow-using-viewpager-and-page-indicator-example/
  *
- * TODO: there are still issues related to low memory and selecting pages from the buttons rather by paging
+ * TODO: there are still issues related to low memory and selecting pages from the buttons rather by paging - there is a critical number for ImageViews being active at the same time, i.e. problems are not caused by repeatedly loading images
  */
 public class MediaPagerFragment extends Fragment implements EventGenerator, EventListenerOwner {
 
