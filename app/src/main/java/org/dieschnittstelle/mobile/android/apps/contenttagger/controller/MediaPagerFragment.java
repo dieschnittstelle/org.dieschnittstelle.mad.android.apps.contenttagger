@@ -49,6 +49,7 @@ import java.util.List;
  * TODO: there are still issues related to low memory and selecting pages from the buttons rather by paging - there is a critical number for ImageViews being active at the same time, i.e. problems are not caused by repeatedly loading images
  *
  * for creting sliding up panels that do not hide the background, see: https://android-arsenal.com/details/1/4929
+ * TODO: add closing action button to sliding up panel, use custom button with smaller diameter instead of float button for opening
  */
 public class MediaPagerFragment extends Fragment implements EventGenerator, EventListenerOwner {
 
