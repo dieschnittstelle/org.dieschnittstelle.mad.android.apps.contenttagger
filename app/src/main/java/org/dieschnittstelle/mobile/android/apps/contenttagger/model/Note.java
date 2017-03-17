@@ -21,9 +21,16 @@ public class Note extends Taggable implements Serializable {
     public static Comparator<Note> COMPARE_BY_DATE = new Comparator<Note>() {
         @Override
         public int compare(Note lhs, Note rhs) {
-            Long lhsdate = lhs.lastmodified;
-            Long rhsdate = rhs.lastmodified;
-            return lhsdate.compareTo(rhsdate);
+            if (lhs.created > 0 && lhs.created > 0) {
+                Long lhsdate = lhs.created;
+                Long rhsdate = rhs.created;
+                return lhsdate.compareTo(rhsdate);
+            }
+            else {
+                Long lhsdate = lhs.lastmodified;
+                Long rhsdate = rhs.lastmodified;
+                return lhsdate.compareTo(rhsdate);
+            }
         }
     };
 
@@ -33,6 +40,8 @@ public class Note extends Taggable implements Serializable {
     private String content;
 
     private long lastmodified = System.currentTimeMillis();
+
+    private long created = System.currentTimeMillis();
 
     private Long id;
 
@@ -114,4 +123,11 @@ public class Note extends Taggable implements Serializable {
         super.update();
     }
 
+    public long getCreated() {
+        return created;
+    }
+
+    public void setCreated(long created) {
+        this.created = created;
+    }
 }
