@@ -63,4 +63,5 @@
     <string name="title_create_place">New Place</string>
     <!-- a constant for a tag set on imageView -->
     <string name="tag_viewholder_id">viewHolderId</string>
+    <string name="tag_position">position</string>
 </resources>

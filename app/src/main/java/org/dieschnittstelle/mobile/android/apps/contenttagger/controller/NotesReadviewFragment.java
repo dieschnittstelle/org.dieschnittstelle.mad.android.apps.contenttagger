@@ -48,9 +48,12 @@ public class NotesReadviewFragment extends NotesEditviewFragment implements Even
         content.setTextColor(getResources().getColor(R.color.abc_primary_text_material_dark));
 
         tagsbarController.setRemoveActive(false);
-        attachmentsController.setEditable(false);
 
         return view;
+    }
+
+    protected boolean isEditable() {
+        return false;
     }
 
     protected void addEventListeners() {

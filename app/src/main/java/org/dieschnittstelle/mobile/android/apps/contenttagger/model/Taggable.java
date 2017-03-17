@@ -119,6 +119,10 @@ public abstract class Taggable extends Entity {
         }
     }
 
+    public void setAttachments(List<Taggable> attachments) {
+        this.attachments = attachments;
+    }
+
     public void removeAttachment(Taggable attachment) {
         this.attachments.remove(attachment);
         attachment.removeAttacher(this);
@@ -144,6 +148,10 @@ public abstract class Taggable extends Entity {
 
     public List<Taggable> getAttachers() {
         return this.attachers;
+    }
+
+    public void setAttachers(List<Taggable> attachers) {
+        this.attachers = attachers;
     }
 
     public abstract String getTitle();

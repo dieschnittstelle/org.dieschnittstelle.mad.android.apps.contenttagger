@@ -187,9 +187,13 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
 
         // TODO: tagsbarController could be refactored such that reading out the tagsbar will be encapsulated therein
         this.tagsbarController = new TagsbarController(this,(ViewGroup)contentView.findViewById(R.id.tagsbar),R.layout.tagsbar_itemview);
-        this.attachmentsController = new AttachmentsPanelController(this,contentView);
+        this.attachmentsController = new AttachmentsPanelController(this,contentView,isEditable());
 
         return contentView;
+    }
+
+    protected boolean isEditable() {
+        return true;
     }
 
     @Override

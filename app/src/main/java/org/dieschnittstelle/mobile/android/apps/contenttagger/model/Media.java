@@ -207,7 +207,7 @@ public class Media extends Taggable implements Serializable {
             callback.onImageLoaded(this.thumbnail);
         }
         else if (this.thumbnailPath != null) {
-            Log.i(logger,"createThumbnail(): load thumbnail from local path: " + this.thumbnailPath);
+//            Log.i(logger,"createThumbnail(): load thumbnail from local path: " + this.thumbnailPath);
 
             new AsyncTask<Void,Void,Bitmap>() {
 
