@@ -54,8 +54,10 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
      * the ui elements
      */
     protected EditText title;
+    protected EditText description;
     protected ImageView mediaContent;
     protected TagsbarController tagsbarController;
+    protected View contentView;
 
     /*
      * the model object that we use
@@ -112,9 +114,10 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
                 media = event.getData();
                 ((ActionBarActivity) getActivity()).setTitle(media.getTitle());
                 title.setText(media.getTitle());
-                if (media.getContentUri() != null) {
-                    mediaContent.setImageURI(Uri.parse(media.getContentUri()));
-                }
+                description.setText(media.getDescription());
+
+                MediaPagerFragment.loadMediaIntoImageView(getActivity(),media,contentView,mediaContent);
+
                 tagsbarController.bindTaggable(media);
             }
         });
@@ -168,9 +171,10 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-        View contentView = inflater.inflate(R.layout.media_editview,container,false);
+        this.contentView = inflater.inflate(R.layout.media_editview,container,false);
 
         this.title = (EditText)contentView.findViewById(R.id.title);
+        this.description = (EditText)contentView.findViewById(R.id.description);
         this.mediaContent = (ImageView)contentView.findViewById(R.id.mediaContent);
         this.tagsbarController = new TagsbarController(this,(ViewGroup)contentView.findViewById(R.id.tagsbar),R.layout.tagsbar_itemview);
 
@@ -198,6 +202,7 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
             case R.id.action_save:
                 // bind the data from the input form to the item
                 media.setTitle(this.title.getText().toString());
+                media.setDescription(this.description.getText().toString());
                 if (media.created()) {
                     media.update();
                 }

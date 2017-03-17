@@ -23,7 +23,7 @@
         android:id="@+id/addMedia"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_add_white_24dp"
+        android:src="@drawable/ic_add_white_18dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         app:backgroundTint="@color/primary_action"

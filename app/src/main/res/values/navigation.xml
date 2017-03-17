@@ -37,5 +37,5 @@
         <item>org.dieschnittstelle.mobile.android.apps.contenttagger.controller.PlacesOverviewFragment</item>
     </string-array>
     <!-- this one specifies the initial view -->
-    <integer name="main_menu_initial_view">1</integer>
+    <integer name="main_menu_initial_view">3</integer>
 </resources>

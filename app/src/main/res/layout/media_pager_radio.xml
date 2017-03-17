@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- for scaling, see: http://stackoverflow.com/questions/3014597/android-how-to-change-the-size-of-the-radiobutton -->
 <RadioButton xmlns:android="http://schemas.android.com/apk/res/android"
     android:buttonTint="@color/primary_action_selected"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:scaleX="0.7"
+    android:scaleY="0.7"
     android:id="@+id/radioButton"/>

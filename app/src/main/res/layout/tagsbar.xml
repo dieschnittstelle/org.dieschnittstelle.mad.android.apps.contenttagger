@@ -5,7 +5,7 @@
     android:layout_alignParentBottom="true">
     <org.apmem.tools.layouts.FlowLayout
         android:id="@+id/tagsbar"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         >
     </org.apmem.tools.layouts.FlowLayout>

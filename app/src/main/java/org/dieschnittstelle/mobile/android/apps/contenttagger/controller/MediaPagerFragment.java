@@ -9,9 +9,11 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,16 +21,22 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
+import com.mancj.slideup.SlideUp;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
 import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
+import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
+import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
+import org.dieschnittstelle.mobile.android.components.events.EventListener;
 import org.dieschnittstelle.mobile.android.components.events.EventListenerOwner;
+import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +47,8 @@ import java.util.List;
  * this follows https://inducesmile.com/android/android-slideshow-using-viewpager-and-page-indicator-example/
  * <p>
  * TODO: there are still issues related to low memory and selecting pages from the buttons rather by paging - there is a critical number for ImageViews being active at the same time, i.e. problems are not caused by repeatedly loading images
+ *
+ * for creting sliding up panels that do not hide the background, see: https://android-arsenal.com/details/1/4929
  */
 public class MediaPagerFragment extends Fragment implements EventGenerator, EventListenerOwner {
 
@@ -53,11 +63,13 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
     */
     private static EventDispatcher eventDispatcher = EventDispatcher.getInstance();
 
+    private ViewGroup contentView;
     private CustomViewPagerAdapter adapter;
     private ViewPager viewPager;
     private int page = 0;
     private LayoutInflater inflater;
     private RadioGroup pagerControls;
+    private TextView itemDescriptionView;
 
     // TODO: we could use this list for doing lazy loading rather than loading each single media element
     private List<Long> displayMediaIdList;
@@ -144,18 +156,33 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
             selectedMediaPos = getArguments().getInt(ARG_SELECTED_MEDIA_POS);
         }
 
-        // we load two instances of the image layout
+        // we load a couple of instances of the image layout
         for (int i = 0; i < RECYCLER_CAPACITY_INITIAL; i++) {
             addRecycleaebleImageView();
         }
+
+        // and set a listener that reacts to changes of an item
+        // TODO: deletion needs to be handled, as well...
+        eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.UPDATED, Media.class), false, new EventListener<Media>() {
+            @Override
+            public void onEvent(Event<Media> event) {
+                Log.i(logger,"onEvent(): updated: " + event.getData());
+                // in case the updated media is the one currently displayed, we update the display
+            }
+        });
+
+
+
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View contentView = inflater.inflate(R.layout.media_pager, container, false);
+        contentView = (ViewGroup)inflater.inflate(R.layout.media_pager, container, false);
         viewPager = (ViewPager) contentView.findViewById(R.id.mediaPager);
         pagerControls = (RadioGroup) contentView.findViewById(R.id.radiogroup);
+
+        createDescriptionSlider();
 
         // we load all media from the list
         new AsyncTask<Void, Void, List<Media>>() {
@@ -221,32 +248,17 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
 
             final ImageView mediaContent = bindReycleableImageViewForPosition(position);
 
-            final View loadPlaceholder = view.findViewById(R.id.loadPlaceholder);
-
             if (mediaContent != null) {
-                loadPlaceholder.setVisibility(View.VISIBLE);
                 mediaContentContainer.addView(mediaContent);
 
-                // set a thumbnail first
-                media.loadThumbnail(context, new Media.OnImageLoadedHandler() {
-                    public void onImageLoaded(Bitmap image) {
-                        Log.i(logger,"onerror(): setting thumbnail on image: " + ((image == null ) ? "null" : "<bitmap>"));
-                        mediaContent.setImageBitmap(image);
-                    }
-                });
+                loadMediaIntoImageView(getActivity(),media,view,mediaContent);
 
-                // use a manually controlled placeholder animation as shown in http://stackoverflow.com/questions/24826459/animated-loading-image-in-picasso
-                Picasso.with(context).load(Uri.parse(media.getContentUri())).into(mediaContent, new Callback() {
+                // add a listener that opens the detailview for the media
+                mediaContent.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onSuccess() {
-                        loadPlaceholder.setVisibility(View.GONE);
+                    public void onClick(View view) {
+                        ((MainNavigationControllerActivity) getActivity()).showView(MediaEditviewFragment.class, MainNavigationControllerActivity.createArguments(MediaEditviewFragment.ARG_MEDIA_ID, media.getId()), true);
                     }
-
-                    @Override
-                    public void onError() {
-                        loadPlaceholder.setVisibility(View.GONE);
-                    }
-
                 });
 
             }
@@ -261,6 +273,44 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
 
             return view;
         }
+
+        public Object getItem(int pos) {
+            return mediaList.get(pos);
+        }
+
+    }
+
+    public static void loadMediaIntoImageView(Context context,Media media,View mediaContainer,final ImageView mediaContent) {
+        final View loadPlaceholder = mediaContainer.findViewById(R.id.loadPlaceholder);
+        if (loadPlaceholder != null) {
+            loadPlaceholder.setVisibility(View.VISIBLE);
+        }
+
+        // set a thumbnail first
+        media.loadThumbnail(context, new Media.OnImageLoadedHandler() {
+            public void onImageLoaded(Bitmap image) {
+                Log.i(logger,"setting thumbnail on image: " + ((image == null ) ? "null" : "<bitmap>"));
+                mediaContent.setImageBitmap(image);
+            }
+        });
+
+        // use a manually controlled placeholder animation as shown in http://stackoverflow.com/questions/24826459/animated-loading-image-in-picasso
+        Picasso.with(context).load(Uri.parse(media.getContentUri())).into(mediaContent, new Callback() {
+            @Override
+            public void onSuccess() {
+                if (loadPlaceholder != null) {
+                    loadPlaceholder.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onError() {
+                if (loadPlaceholder != null) {
+                    loadPlaceholder.setVisibility(View.GONE);
+                }
+            }
+
+        });
 
     }
 
@@ -283,6 +333,16 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
                     Log.i(logger, "onPageSelected(): " + position);
                     // here, we select the radio buttons
                     updateRadioGroup(position);
+                    // and we update the description
+                    Media selectedItem = (Media)adapter.getItem(position);
+                    if (selectedItem != null && selectedItem.getDescription() != null) {
+                        if (itemDescriptionView != null) {
+                            itemDescriptionView.setText(selectedItem.getDescription());
+                        }
+                        else {
+                            Log.e(logger,"itemDescriptionView has not been instantiated!");
+                        }
+                    }
                 }
 
                 @Override
@@ -339,6 +399,54 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
                 }
             }
         }
+    }
+
+    // handle the sliding panel that will display the images' description
+    private void createDescriptionSlider() {
+        Log.i(logger,"createDescriptionSlider()");
+        final View slideViewContainer = inflater.inflate(R.layout.media_pager_itemview_description,null);
+        final View slideView = slideViewContainer.findViewById(R.id.slider);
+        // we set the instance attribute on which the description text will be displayed
+        itemDescriptionView = (TextView)slideView.findViewById(R.id.itemDescription);
+        Log.d(logger,"createDescriptionSlider(): itemDescriptionView is: " + itemDescriptionView);
+        contentView.addView(slideViewContainer);
+        final FloatingActionButton fab = (FloatingActionButton) slideViewContainer.findViewById(R.id.sliderControl);
+        // we read out the description
+
+       final SlideUp slideUp = new SlideUp.Builder(slideView)
+                .withListeners(new SlideUp.Listener() {
+                    @Override
+                    public void onSlide(float percent) {
+                        Log.i(logger,"onSlide(): " + percent);
+                        slideView.setAlpha(1 - (percent / 100));
+                    }
+
+                    @Override
+                    public void onVisibilityChanged(int visibility) {
+                        Log.i(logger,"onVisibilityChanged(): " + visibility);
+                        if (visibility == View.GONE) {
+                            fab.setVisibility(View.VISIBLE);
+                        }
+                        else {
+                            fab.setVisibility(View.GONE);
+                        }
+                    }
+                })
+               .withStartGravity(Gravity.BOTTOM)
+               .withLoggingEnabled(true)
+               .withGesturesEnabled(true)
+               .withStartState(SlideUp.State.HIDDEN)
+               .build();
+
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                slideUp.show();
+                fab.setVisibility(View.GONE);
+            }
+        });
+
+        Log.i(logger,"createDescriptionSlider(): created slider: " + slideUp);
     }
 
     @Override

@@ -20,20 +20,53 @@
         android:layout_below="@id/title"
         android:layout_width="match_parent"
         android:layout_height="10dp" />
-    <ImageView
-        android:id="@+id/mediaContent"
-        android:layout_below="@id/space1"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-    <!-- here we could add a webview showing the content of the url
+        android:layout_height="wrap_content"
+        android:layout_below="@id/space1"
+        android:id="@+id/mediaContentContainer">
+        <ImageView
+            android:id="@+id/mediaContent"
+            android:layout_centerHorizontal="true"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"/>
+        <ImageView
+            android:visibility="gone"
+            android:id="@+id/loadPlaceholder"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/progress_animation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+    <Space
+        android:id="@+id/space2"
+        android:layout_below="@id/mediaContentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="10dp" />
     <ScrollView
-        android:layout_below="@id/space"
         android:id="@+id/ScrollView01"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="150dp"
+        android:layout_below="@id/space2"
         android:background="@drawable/input_rectangle_border">
 
-    </ScrollView>-->
+        <!-- background hides the bar underneath -->
+        <EditText
+            android:id="@+id/description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:hint="@string/blind_large_1"
+            android:maxLength="99999999"
+            android:padding="5dp"
+            android:textColorHint="@color/edittext_hint"
+            android:textCursorDrawable="@drawable/edittext_cursor_darkbackground"
+            android:textSize="13dp" />
+
+    </ScrollView>
 
     <include layout="@layout/tagsbar"/>
 
