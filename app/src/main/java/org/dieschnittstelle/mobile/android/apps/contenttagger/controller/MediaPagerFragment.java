@@ -82,92 +82,6 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
     private List<Long> displayMediaIdList;
     private int selectedMediaPos = -1;
 
-    private static final int RECYCLER_CAPACITY_INITIAL = -1;
-
-    // some class that wraps an image view and indicates whether it is used or not
-    private class RecycleableImageViewHolder {
-
-        public View view;
-        public int user = -1;
-        public int id;
-
-        public RecycleableImageViewHolder(int id, View view) {
-            this.view = view;
-            view.setTag(R.string.tag_viewholder_id, id);
-        }
-    }
-
-    private List<RecycleableImageViewHolder> recycleableImageViews = new ArrayList<RecycleableImageViewHolder>();
-
-    private View bindReycleableImageViewForPosition(int pos) {
-        if (RECYCLER_CAPACITY_INITIAL == -1) {
-            Log.i(logger, "bindRecycleableImageView(): view recycling not active, create new view for position: " + pos);
-            return addRecycleableImageView().view;
-        }
-        else {
-            synchronized (recycleableImageViews) {
-
-                RecycleableImageViewHolder useView = null;
-                for (RecycleableImageViewHolder view : recycleableImageViews) {
-                    if (view.user == -1) {
-                        useView = view;
-                    }
-                }
-                if (useView == null) {
-                        Log.e(logger, "bindRecycleableImageView(): capacity exceeded. Need to create new view!");
-                    useView = addRecycleableImageView();
-                }
-                useView.user = pos;
-
-                return useView.view;
-            }
-//        return (ImageView) inflater.inflate(R.layout.media_pager_itemview_image, null);
-        }
-    }
-
-    private void releaseRecycleableImageView(View view,int position) {
-        if (RECYCLER_CAPACITY_INITIAL != -1) {
-            synchronized (recycleableImageViews) {
-                if (view != null) {
-                    // remove the view from its parent, which should be done anyway, though
-                    ViewGroup parent = (ViewGroup) view.getParent();
-                    if (parent != null) {
-                        parent.removeView(view);
-                    }
-
-                    Integer holderId = (Integer) view.getTag(R.string.tag_viewholder_id);
-                    if (holderId == null) {
-                        Log.i(logger, "releaseRecycleableImageView(): cannot release. no holderId set on imageView: " + view);
-                        return;
-                    }
-                    Log.e(logger, "releaseRecycleableImageView(): releasing: " + holderId);
-                    recycleableImageViews.get(holderId).user = -1;
-                    // see http://stackoverflow.com/questions/2859212/how-to-clear-an-imageview-in-android
-//                    view.setImageResource(0);
-                } else {
-                    Log.e(logger, "releaseRecycleableImageView(): no view specified. got null");
-                }
-            }
-        }
-        else {
-            if (view != null) {
-                Log.i(logger, "bindRecycleableImageView(): view recycling not active, release image resource for position: " + position);
-//                view.setImageResource(0);
-            }
-        }
-    }
-
-    private RecycleableImageViewHolder addRecycleableImageView() {
-        RecycleableImageViewHolder newView = new RecycleableImageViewHolder(recycleableImageViews.size(), inflater.inflate(R.layout.media_pager_itemview_image, null));
-        // if we shall not use the recycling mechanism, just return the view
-        if (RECYCLER_CAPACITY_INITIAL != -1) {
-            recycleableImageViews.add(newView);
-        }
-
-        return newView;
-    }
-
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -183,11 +97,6 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
             selectedMediaPos = 0;
         }
 
-        // we load a couple of instances of the image layout
-        for (int i = 0; i < RECYCLER_CAPACITY_INITIAL; i++) {
-            addRecycleableImageView();
-        }
-
         // and set a listener that reacts to changes of an item
         // TODO: deletion needs to be handled, as well...
         eventDispatcher.addEventListener(this, new EventMatcher(Event.CRUD.TYPE, Event.CRUD.UPDATED, Media.class), false, new EventListener<Media>() {
@@ -197,8 +106,6 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
                 // in case the updated media is the one currently displayed, we update the display
             }
         });
-
-
 
     }
 
@@ -267,12 +174,9 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             Log.i(logger, "destroyItem(): " + position);
-//            mediaList.get(position).releaseImage();
-//            ViewGroup mediaContentContainer = (ViewGroup) container.findViewById(R.id.mediaContentContainer);
-//            ImageView mediaContent = (ImageView) container.findViewById(R.id.mediaContent);
-//            releaseRecycleableImageView(mediaContent,position);
-//            mediaContentContainer.removeView(mediaContent);
-//            container.removeView((View) object);
+
+            // well, we could reset the alias, but leave this up to later...
+
         }
 
         @Override
@@ -282,7 +186,7 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
             final Media media = mediaList.get(position);
             final ViewGroup mediaContentContainer = (ViewGroup) view.findViewById(R.id.mediaContentContainer);
 
-            final View mediaContent = bindReycleableImageViewForPosition(position);
+            final View mediaContent =  inflater.inflate(R.layout.media_pager_itemview_image, null);
 
             if (mediaContent != null) {
                 mediaContentContainer.addView(mediaContent);
