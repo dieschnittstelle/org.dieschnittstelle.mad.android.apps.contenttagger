@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- follwing https://inducesmile.com/android/android-slideshow-using-viewpager-and-page-indicator-example/ -->
 <!-- card view requires usage of a particular background color attribute!!! -->
-<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@id/mediaContent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/aliasableMediaContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:adjustViewBounds="true"
-    android:scaleType="fitCenter" />
+    android:orientation="vertical">
+    <ImageView
+        android:id="@+id/mediaAlias"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter" />
+    <LinearLayout
+        android:id="@+id/mediaContentWrapper"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_height="match_parent">
+    </LinearLayout>
+</LinearLayout>

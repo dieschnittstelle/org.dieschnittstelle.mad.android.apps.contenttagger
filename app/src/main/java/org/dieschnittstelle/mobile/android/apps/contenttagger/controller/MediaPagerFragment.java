@@ -2,7 +2,6 @@ package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -17,6 +16,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.RadioButton;
@@ -39,14 +39,17 @@ import org.dieschnittstelle.mobile.android.components.events.EventListenerOwner;
 import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by master on 15.03.17.
  * <p>
  * this follows https://inducesmile.com/android/android-slideshow-using-viewpager-and-page-indicator-example/
  * <p>
- * TODO: there are still issues related to low memory and selecting pages from the buttons rather by paging - there is a critical number for ImageViews being active at the same time, i.e. problems are not caused by repeatedly loading images
+ * DONE: there are still issues related to low memory and selecting pages from the buttons rather by paging - there is a critical number for ImageViews being active at the same time, i.e. problems are not caused by repeatedly loading images
+ * solved this issue by only instantiating a single ImageView for the full size image, which will be set onItemSelected, thumbnails will be created for all items
  *
  * for creting sliding up panels that do not hide the background, see: https://android-arsenal.com/details/1/4929
  * TODO: add closing action button to sliding up panel, use custom button with smaller diameter instead of float button for opening
@@ -58,6 +61,9 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
     // arguments
     public static final String ARG_DISPLAY_MEDIA = "mediaIds";
     public static final String ARG_SELECTED_MEDIA_POS = "selectedMedia";
+
+    public static final int FLAG_LOAD_THUMBNAIL = 1;
+    public static final int FLAG_LOAD_IMAGE = 2;
 
     /*
     * the event dispatcher
@@ -76,16 +82,16 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
     private List<Long> displayMediaIdList;
     private int selectedMediaPos = -1;
 
-    private static final int RECYCLER_CAPACITY_INITIAL = 3;
+    private static final int RECYCLER_CAPACITY_INITIAL = -1;
 
     // some class that wraps an image view and indicates whether it is used or not
     private class RecycleableImageViewHolder {
 
-        public ImageView view;
+        public View view;
         public int user = -1;
         public int id;
 
-        public RecycleableImageViewHolder(int id, ImageView view) {
+        public RecycleableImageViewHolder(int id, View view) {
             this.view = view;
             view.setTag(R.string.tag_viewholder_id, id);
         }
@@ -93,53 +99,70 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
 
     private List<RecycleableImageViewHolder> recycleableImageViews = new ArrayList<RecycleableImageViewHolder>();
 
-    private ImageView bindReycleableImageViewForPosition(int pos) {
-        synchronized (recycleableImageViews) {
-
-            RecycleableImageViewHolder useView = null;
-            for (RecycleableImageViewHolder view : recycleableImageViews) {
-                if (view.user == -1) {
-                    useView = view;
-                }
-            }
-            if (useView == null) {
-                Log.e(logger, "bindRecycleableImageView(): capacity exceeded. Need to create new view!");
-                useView = addRecycleaebleImageView();
-            }
-            useView.user = pos;
-
-            return useView.view;
+    private View bindReycleableImageViewForPosition(int pos) {
+        if (RECYCLER_CAPACITY_INITIAL == -1) {
+            Log.i(logger, "bindRecycleableImageView(): view recycling not active, create new view for position: " + pos);
+            return addRecycleableImageView().view;
         }
+        else {
+            synchronized (recycleableImageViews) {
+
+                RecycleableImageViewHolder useView = null;
+                for (RecycleableImageViewHolder view : recycleableImageViews) {
+                    if (view.user == -1) {
+                        useView = view;
+                    }
+                }
+                if (useView == null) {
+                        Log.e(logger, "bindRecycleableImageView(): capacity exceeded. Need to create new view!");
+                    useView = addRecycleableImageView();
+                }
+                useView.user = pos;
+
+                return useView.view;
+            }
 //        return (ImageView) inflater.inflate(R.layout.media_pager_itemview_image, null);
+        }
     }
 
-    private void releaseRecycleableImageView(ImageView view) {
-        synchronized (recycleableImageViews) {
-            if (view != null) {
-                // remove the view from its parent, which should be done anyway, though
-                ViewGroup parent = (ViewGroup) view.getParent();
-                if (parent != null) {
-                    parent.removeView(view);
-                }
+    private void releaseRecycleableImageView(View view,int position) {
+        if (RECYCLER_CAPACITY_INITIAL != -1) {
+            synchronized (recycleableImageViews) {
+                if (view != null) {
+                    // remove the view from its parent, which should be done anyway, though
+                    ViewGroup parent = (ViewGroup) view.getParent();
+                    if (parent != null) {
+                        parent.removeView(view);
+                    }
 
-                Integer holderId = (Integer) view.getTag(R.string.tag_viewholder_id);
-                if (holderId == null) {
-                    Log.i(logger, "releaseRecycleableImageView(): cannot release. no holderId set on imageView: " + view);
-                    return;
+                    Integer holderId = (Integer) view.getTag(R.string.tag_viewholder_id);
+                    if (holderId == null) {
+                        Log.i(logger, "releaseRecycleableImageView(): cannot release. no holderId set on imageView: " + view);
+                        return;
+                    }
+                    Log.e(logger, "releaseRecycleableImageView(): releasing: " + holderId);
+                    recycleableImageViews.get(holderId).user = -1;
+                    // see http://stackoverflow.com/questions/2859212/how-to-clear-an-imageview-in-android
+//                    view.setImageResource(0);
+                } else {
+                    Log.e(logger, "releaseRecycleableImageView(): no view specified. got null");
                 }
-                Log.e(logger, "releaseRecycleableImageView(): releasing: " + holderId);
-                recycleableImageViews.get(holderId).user = -1;
-                // see http://stackoverflow.com/questions/2859212/how-to-clear-an-imageview-in-android
-                view.setImageResource(0);
-            } else {
-                Log.e(logger, "releaseRecycleableImageView(): no view specified. got null");
+            }
+        }
+        else {
+            if (view != null) {
+                Log.i(logger, "bindRecycleableImageView(): view recycling not active, release image resource for position: " + position);
+//                view.setImageResource(0);
             }
         }
     }
 
-    private RecycleableImageViewHolder addRecycleaebleImageView() {
-        RecycleableImageViewHolder newView = new RecycleableImageViewHolder(recycleableImageViews.size(), (ImageView) inflater.inflate(R.layout.media_pager_itemview_image, null));
-        recycleableImageViews.add(newView);
+    private RecycleableImageViewHolder addRecycleableImageView() {
+        RecycleableImageViewHolder newView = new RecycleableImageViewHolder(recycleableImageViews.size(), inflater.inflate(R.layout.media_pager_itemview_image, null));
+        // if we shall not use the recycling mechanism, just return the view
+        if (RECYCLER_CAPACITY_INITIAL != -1) {
+            recycleableImageViews.add(newView);
+        }
 
         return newView;
     }
@@ -156,10 +179,13 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
         if (getArguments().containsKey(ARG_SELECTED_MEDIA_POS)) {
             selectedMediaPos = getArguments().getInt(ARG_SELECTED_MEDIA_POS);
         }
+        else {
+            selectedMediaPos = 0;
+        }
 
         // we load a couple of instances of the image layout
         for (int i = 0; i < RECYCLER_CAPACITY_INITIAL; i++) {
-            addRecycleaebleImageView();
+            addRecycleableImageView();
         }
 
         // and set a listener that reacts to changes of an item
@@ -202,6 +228,9 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
                 initialisePager(media);
                 if (selectedMediaPos > -1) {
                     viewPager.setCurrentItem(selectedMediaPos);
+                    // as the display of the current item will not be page change, we need to trigger item selection (and loading of the real image) by hand
+                    // TODO: this does not work relably, as it might be that view creation will be delayed
+                    adapter.onItemSelected(media.get(selectedMediaPos), selectedMediaPos);
                 }
             }
 
@@ -213,6 +242,12 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
     public class CustomViewPagerAdapter extends PagerAdapter {
         private Context context;
         private List<Media> mediaList;
+
+        // we use a single ImageView for showing the full images, which will be removed/set onItemSelected()
+        private ImageView recycleableImageView;
+
+        // we keep a map of items and views in order to update the actual image once a view is selected
+        private Map<Media,View> mediaViewMap = new HashMap<Media,View>();
 
         public CustomViewPagerAdapter(Context context, List<Media> mediaList) {
             this.context = context;
@@ -233,11 +268,11 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
         public void destroyItem(ViewGroup container, int position, Object object) {
             Log.i(logger, "destroyItem(): " + position);
 //            mediaList.get(position).releaseImage();
-            ViewGroup mediaContentContainer = (ViewGroup) container.findViewById(R.id.mediaContentContainer);
-            ImageView mediaContent = (ImageView) container.findViewById(R.id.mediaContent);
-            releaseRecycleableImageView(mediaContent);
-            mediaContentContainer.removeView(mediaContent);
-            container.removeView((View) object);
+//            ViewGroup mediaContentContainer = (ViewGroup) container.findViewById(R.id.mediaContentContainer);
+//            ImageView mediaContent = (ImageView) container.findViewById(R.id.mediaContent);
+//            releaseRecycleableImageView(mediaContent,position);
+//            mediaContentContainer.removeView(mediaContent);
+//            container.removeView((View) object);
         }
 
         @Override
@@ -247,12 +282,12 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
             final Media media = mediaList.get(position);
             final ViewGroup mediaContentContainer = (ViewGroup) view.findViewById(R.id.mediaContentContainer);
 
-            final ImageView mediaContent = bindReycleableImageViewForPosition(position);
+            final View mediaContent = bindReycleableImageViewForPosition(position);
 
             if (mediaContent != null) {
                 mediaContentContainer.addView(mediaContent);
 
-                loadMediaIntoImageView(getActivity(),media,view,mediaContent);
+                loadMediaIntoImageView(getActivity(),media,view,mediaContent,FLAG_LOAD_THUMBNAIL);
 
                 // add a listener that opens the detailview for the media
                 mediaContent.setOnClickListener(new View.OnClickListener() {
@@ -272,46 +307,182 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
                 }
             });
 
+            mediaViewMap.put(media,view);
+
             return view;
+        }
+
+        public void onItemSelected(Media media, int position) {
+            // we need to retrieve the imageView for the given media element
+            View view = mediaViewMap.get(media);
+            if (view == null) {
+                Log.e(logger,"onItemSelected(): no view seems to exist for media at position: " + position);
+                return;
+            }
+            // we read the media from the view
+            View mediaContentContainer = view.findViewById(R.id.aliasableMediaContainer);
+            if (mediaContentContainer == null) {
+                Log.e(logger,"onItemSelected(): no mediaContent element found in view for media at position: " + position);
+                return;
+            }
+            // check whether the recycleview has already been instantiated, otherwise read it out from the container
+            if (recycleableImageView == null) {
+                Log.i(logger,"onItemSelected(): instantiating the recycleable image view for position: " + position);
+                recycleableImageView = (ImageView)inflater.inflate(R.layout.media_pager_itemview_image_content,null);
+            }
+            else {
+                Log.i(logger,"onItemSelected(): recycling the recycleable image view for position: " + position);
+                // we need to lookup the parent container in order to set the alias to visible
+                ViewGroup currentContainer = (ViewGroup)findAncestorById(recycleableImageView,R.id.aliasableMediaContainer);
+                if (currentContainer == null) {
+                    Log.e(logger,"onItemSelected(): recycleable image view is not contained in aliasableMediaContainer! Cannot swap visibility on alias.");
+                }
+                else {
+                    View mediaAlias = currentContainer.findViewById(R.id.mediaAlias);
+                    if (mediaAlias == null) {
+                        Log.e(logger,"onItemSelected(): could not find a mediaAlias for recycleable image view! Cannot swap visibility on alias.");
+                    }
+                    else {
+                        Log.i(logger,"onItemSelected(): set visibility on the alias for the current holder of recycleable image view");
+                        mediaAlias.setVisibility(View.VISIBLE);
+                    }
+                }
+
+                // we now remove the view from its current parent
+                if (recycleableImageView.getParent() != null) {
+                    ((ViewGroup) recycleableImageView.getParent()).removeView(recycleableImageView);
+                    Log.i(logger, "onItemSelected(): removed recycleableImageView from its current parent");
+                }
+                else {
+                    Log.e(logger, "onItemSelected(): recycleableImageView cannot be removed from its current parent. No parent seems to exist");
+                }
+
+            }
+
+            // and set it to the placeholde in the current mediaContainer
+            ViewGroup mediaContentWrapper = (ViewGroup)mediaContentContainer.findViewById(R.id.mediaContentWrapper);
+            mediaContentWrapper.addView(recycleableImageView);
+            recycleableImageView.setVisibility(View.GONE);
+            recycleableImageView.setImageResource(0);
+            Log.i(logger,"onItemSelected(): loading real image for position: " + position + ", into: " + recycleableImageView);
+            checkStatus();
+            loadMediaIntoImageView(getActivity(),media,view,mediaContentContainer,FLAG_LOAD_IMAGE);
         }
 
         public Object getItem(int pos) {
             return mediaList.get(pos);
         }
 
+        private View findAncestorById(View view,int id) {
+
+            ViewParent parent = view.getParent();
+            if (view.getId() == id) {
+                return view;
+            }
+            else if (!(parent instanceof ViewGroup)) {
+                return null;
+            }
+            else {
+                return findAncestorById((View)parent,id);
+            }
+
+        }
+
+        private void checkStatus() {
+            for (Media key : mediaViewMap.keySet()) {
+                View view = mediaViewMap.get(key);
+                if (view != null) {
+                    if (view.findViewById(R.id.mediaContent) != null) {
+                        Log.d(logger,"checkStatus(): found mediaContent for item at position: " + mediaList.indexOf(key));
+                    }
+                }
+            }
+        }
+
     }
 
-    public static void loadMediaIntoImageView(Context context,Media media,View mediaContainer,final ImageView mediaContent) {
+    public static void loadMediaIntoImageView(Context context,Media media,View mediaContainer,final View mediaContentContainer,int options) {
+        boolean loadThumbnail = (options & FLAG_LOAD_THUMBNAIL) == FLAG_LOAD_THUMBNAIL;
+        boolean loadImage = (options & FLAG_LOAD_IMAGE) == FLAG_LOAD_IMAGE;
+
         final View loadPlaceholder = mediaContainer.findViewById(R.id.loadPlaceholder);
         if (loadPlaceholder != null) {
             loadPlaceholder.setVisibility(View.VISIBLE);
         }
 
-        // set a thumbnail first
-        media.loadThumbnail(context, new Media.OnImageLoadedHandler() {
-            public void onImageLoaded(Bitmap image) {
-                Log.i(logger,"setting thumbnail on image: " + ((image == null ) ? "null" : "<bitmap>"));
-                mediaContent.setImageBitmap(image);
-            }
-        });
+        ImageView mediaContent = null;
+        ImageView mediaAlias = null;
 
-        // use a manually controlled placeholder animation as shown in http://stackoverflow.com/questions/24826459/animated-loading-image-in-picasso
-        Picasso.with(context).load(Uri.parse(media.getContentUri())).into(mediaContent, new Callback() {
-            @Override
-            public void onSuccess() {
+        // if mediaContent is an imageView then we do not use an alias
+        if (mediaContentContainer instanceof ImageView) {
+            mediaContent = (ImageView)mediaContentContainer;
+            mediaAlias = (ImageView)mediaContentContainer;
+        }
+        else {
+            mediaAlias = (ImageView)mediaContentContainer.findViewById(R.id.mediaAlias);
+            mediaContent = (ImageView)mediaContentContainer.findViewById(R.id.mediaContent);
+        }
+
+        final ImageView useMediaContent = mediaContent;
+        final ImageView useMediaAlias = mediaAlias;
+
+        // we load the alias and the real media element
+
+
+        if (loadThumbnail) {
+            if (useMediaAlias != useMediaContent) {
+                useMediaAlias.setVisibility(View.VISIBLE);
+                if (useMediaContent != null) {
+                    useMediaContent.setVisibility(View.GONE);
+                }
+            }
+
+            // set a thumbnail first
+            media.loadThumbnail(context, new Media.OnImageLoadedHandler() {
+                public void onImageLoaded(Bitmap image) {
+                    Log.i(logger, "loadMediaIntoImageView(): setting thumbnail on image: " + ((image == null) ? "null" : "<bitmap>"));
+                    useMediaAlias.setImageBitmap(image);
+                }
+            });
+
+        }
+
+        if (loadImage) {
+            if (useMediaContent == null) {
+                Log.e(logger,"loadMediaIntoImageView(): no media content element found!");
                 if (loadPlaceholder != null) {
                     loadPlaceholder.setVisibility(View.GONE);
                 }
             }
+            else {
+                // use a manually controlled placeholder animation as shown in http://stackoverflow.com/questions/24826459/animated-loading-image-in-picasso
+                Picasso.with(context).load(Uri.parse(media.getContentUri())).into(useMediaContent, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        if (loadPlaceholder != null) {
+                            loadPlaceholder.setVisibility(View.GONE);
+                            if (useMediaAlias != useMediaContent) {
+                                useMediaAlias.setVisibility(View.GONE);
+                                useMediaContent.setVisibility(View.VISIBLE);
+                            }
+                        }
+                    }
 
-            @Override
-            public void onError() {
-                if (loadPlaceholder != null) {
-                    loadPlaceholder.setVisibility(View.GONE);
-                }
+                    @Override
+                    public void onError() {
+                        if (loadPlaceholder != null) {
+                            loadPlaceholder.setVisibility(View.GONE);
+                        }
+                    }
+
+                });
             }
-
-        });
+        }
+        else if (loadThumbnail) {
+            if (loadPlaceholder != null) {
+                loadPlaceholder.setVisibility(View.GONE);
+            }
+        }
 
     }
 
@@ -344,6 +515,8 @@ public class MediaPagerFragment extends Fragment implements EventGenerator, Even
                             Log.e(logger,"itemDescriptionView has not been instantiated!");
                         }
                     }
+
+                    adapter.onItemSelected(selectedItem,position);
                 }
 
                 @Override

@@ -116,7 +116,7 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
                 title.setText(media.getTitle());
                 description.setText(media.getDescription());
 
-                MediaPagerFragment.loadMediaIntoImageView(getActivity(),media,contentView,mediaContent);
+                MediaPagerFragment.loadMediaIntoImageView(getActivity(),media,contentView,mediaContent,MediaPagerFragment.FLAG_LOAD_THUMBNAIL | MediaPagerFragment.FLAG_LOAD_IMAGE);
 
                 tagsbarController.bindTaggable(media);
             }
