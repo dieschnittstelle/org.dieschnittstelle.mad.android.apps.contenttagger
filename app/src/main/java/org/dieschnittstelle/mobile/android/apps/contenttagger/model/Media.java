@@ -31,6 +31,8 @@ public class Media extends Taggable implements Serializable {
 
     public static enum ContentType {LOCALURI, EXTURI, LOCALDATA};
 
+    protected static String logger = "Media";
+
     public static final int THUMBNAIL_WIDTH = 150;
     public static final int THUMBNAIL_HEIGHT= 150;
 
@@ -82,6 +84,7 @@ public class Media extends Taggable implements Serializable {
     }
 
     public void setTitle(String title) {
+        Log.d(logger,"setTitle(): " + title);
         this.title = title;
     }
 
@@ -195,6 +198,7 @@ public class Media extends Taggable implements Serializable {
     }
 
     public void setDescription(String description) {
+        Log.d(logger,"setDescription(): " + description);
         this.description = description;
     }
 

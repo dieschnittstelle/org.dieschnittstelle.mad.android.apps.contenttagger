@@ -21,6 +21,10 @@ android {
     dexOptions {
         preDexLibraries = false
     }
+
+    dataBinding {
+        enabled = true
+    }
 }
 
 dependencies {

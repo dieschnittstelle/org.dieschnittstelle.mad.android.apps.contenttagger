@@ -1,73 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background_material_dark"
-    android:padding="10dp">
-    <EditText
-        android:layout_alignParentTop="true"
-        android:id="@+id/title"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:textColorHint="@color/edittext_hint"
-        android:hint="@string/hint_links_editview_title"
-        android:focusable="true"
-        android:background="@drawable/edittext_border_darkbackground"
-        android:textCursorDrawable="@drawable/edittext_cursor_darkbackground"
-        />
-    <Space
-        android:id="@+id/space1"
-        android:layout_below="@id/title"
-        android:layout_width="match_parent"
-        android:layout_height="10dp" />
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+        <import type="org.dieschnittstelle.mobile.android.apps.contenttagger.controller.MediaEditviewFragment.Mode" />
+        <variable
+            name="media"
+            type="org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media" />
+
+        <variable
+            name="mode"
+            type="org.dieschnittstelle.mobile.android.apps.contenttagger.controller.MediaEditviewFragment.Mode" />
+    </data>
+
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/space1"
-        android:id="@+id/mediaContentContainer">
-        <ImageView
-            android:id="@+id/mediaContent"
-            android:layout_centerHorizontal="true"
-            android:layout_width="250dp"
-            android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"/>
-        <ImageView
-            android:visibility="gone"
-            android:id="@+id/loadPlaceholder"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:src="@drawable/progress_animation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </RelativeLayout>
-    <Space
-        android:id="@+id/space2"
-        android:layout_below="@id/mediaContentContainer"
-        android:layout_width="match_parent"
-        android:layout_height="10dp" />
-    <ScrollView
-        android:id="@+id/ScrollView01"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:layout_below="@id/space2"
-        android:background="@drawable/input_rectangle_border">
+        android:layout_height="match_parent"
+        android:background="@color/background_material_dark"
+        android:padding="10dp">
 
-        <!-- background hides the bar underneath -->
+        <!--  we need to explicitly set the text color for the view mode in order to avoid application of default text color for disabled elements -->
+
         <EditText
-            android:id="@+id/description"
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_alignParentTop="true"
+            android:background="@{mode == Mode.EDIT ? @drawable/edittext_border_darkbackground : null}"
+            android:focusable="true"
+            android:hint="@string/hint_links_editview_title"
+            android:text="@={media.title}"
+            android:textColor="@{mode == Mode.EDIT ? @color/abc_primary_text_material_dark : @color/abc_primary_text_material_dark}"            android:enabled="@{mode == Mode.EDIT}"
+            android:textColorHint="@color/edittext_hint"
+            android:textCursorDrawable="@drawable/edittext_cursor_darkbackground" />
+
+        <Space
+            android:id="@+id/space1"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:layout_below="@id/title" />
+
+        <RelativeLayout
+            android:id="@+id/mediaContentContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:hint="@string/blind_large_1"
-            android:maxLength="99999999"
-            android:padding="5dp"
-            android:textColorHint="@color/edittext_hint"
-            android:textCursorDrawable="@drawable/edittext_cursor_darkbackground"
-            android:textSize="13dp" />
+            android:layout_below="@id/space1">
 
-    </ScrollView>
+            <ImageView
+                android:id="@+id/mediaContent"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter" />
 
-    <include layout="@layout/tagsbar"/>
+            <ImageView
+                android:id="@+id/loadPlaceholder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/progress_animation"
+                android:visibility="gone" />
+        </RelativeLayout>
 
-</RelativeLayout>
+        <Space
+            android:id="@+id/space2"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:layout_below="@id/mediaContentContainer" />
+
+        <ScrollView
+            android:id="@+id/ScrollView01"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_below="@id/space2"
+            android:background="@{mode == Mode.EDIT ? @drawable/input_rectangle_border : null}">
+
+            <!-- background hides the bar underneath -->
+            <EditText
+                android:id="@+id/description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="@{mode == Mode.EDIT ? @string/blind_large_1 : null}"
+                android:maxLength="99999999"
+                android:padding="5dp"
+                android:textColorHint="@color/edittext_hint"
+                android:textCursorDrawable="@drawable/edittext_cursor_darkbackground"
+                android:text="@={media.description}"
+                android:textColor="@{mode == Mode.EDIT ? @color/abc_primary_text_material_dark : @color/abc_primary_text_material_dark}"
+                android:enabled="@{mode == Mode.EDIT}"
+                android:textSize="13dp" />
+
+        </ScrollView>
+
+        <include layout="@layout/tagsbar" />
+
+    </RelativeLayout>
+</layout>

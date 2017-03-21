@@ -384,4 +384,81 @@ public abstract class Entity {
         return buf.toString();
     }
 
+    public Entity shallowClone() {
+        try {
+            Entity cloned = this.getClass().newInstance();
+            return mergeFromTo(this,cloned);
+        }
+        catch (Exception e) {
+            Log.e(logger,"shallowClone(): error trying to clone " + this + ": " + e,e);
+            return null;
+        }
+    }
+
+    public void restoreFrom(Entity from) {
+        Log.i(logger,"restoreFrom(): " + from + " into " + this);
+
+        try {
+            mergeFromTo(from,this);
+            Log.i(logger,"restoreFrom(): result: " + this);
+        }
+        catch (Exception e) {
+            Log.e(logger,"restoreFrom(): error trying to merge " + this + " from " + from + ": " + e,e);
+        }
+    }
+
+
+    // this creates a shallow clone of an entity which can be used for preserving a restorable state of the entity (to undo unsaved edits)
+    public Entity mergeFromTo(Entity from,Entity to) {
+        Log.d(logger,"mergeFromTo(): " + from + " to: " + to);
+
+            // we collect the local and the inherited public fields
+            Set<Field> fields = new HashSet<Field>();
+            for (Field field : from.getClass().getDeclaredFields()) {
+                fields.add(field);
+            }
+            for (Field field : from.getClass().getFields()) {
+                fields.add(field);
+            }
+
+            // we handle entity collections and other attributes
+            for (Field field : fields) {
+                if (Collection.class.isAssignableFrom(field.getType()) /*&& field.getGenericType() != null*/) {
+                    Log.d(logger, "mergeFromTo(): found collection typed field with generic collection type: " + field.getName());
+                    Type[] typeParameters = ((ParameterizedType) field.getGenericType()).getActualTypeArguments();
+                    if (typeParameters.length > 0 && Entity.class.isAssignableFrom((Class<?>) typeParameters[0])) {
+                        try {
+                            field.setAccessible(true);
+                            Collection fromvalues = (Collection) field.get(from);
+                            Collection tovalues = (Collection)fromvalues.getClass().newInstance();
+                            if (fromvalues != null) {
+                                for (Object member : fromvalues) {
+                                    tovalues.add(member);
+                                }
+                                Log.d(logger,"mergeFromTo(): merging " + fromvalues.size() + " values of attribute " + field.getName() + " into: " + this);
+                                field.set(to, tovalues);
+                            }
+                        } catch (Exception e) {
+                            Log.e(logger, "mergeFromTo(): cannot process collection field " + field.getName() + ". Got exception: " + e, e);
+                        }
+                    }
+                } else if (!"associations".equals(field.getName()) && !"id".equals(field.getName()) &&  !field.isAnnotationPresent(Ignore.class)) {
+                    field.setAccessible(true);
+                    try {
+                        Object val = field.get(from);
+                        if (val != null) {
+                            field.set(to, val);
+                        }
+                    }
+                    catch (Exception e) {
+                        Log.e(logger, "mergeFromTo(): cannot process field " + field.getName() + ". Got exception: " + e, e);
+                    }
+                }
+            }
+
+            return to;
+
+    }
+
+
 }

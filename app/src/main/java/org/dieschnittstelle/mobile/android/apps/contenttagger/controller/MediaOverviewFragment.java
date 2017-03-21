@@ -177,7 +177,9 @@ public class MediaOverviewFragment extends Fragment implements EventGenerator, E
                 @Override
                 protected void onSelectEntity(Media entity) {
                     // on select, we show the editview, passing the entity's id!
-                    ((MainNavigationControllerActivity) getActivity()).showView(MediaEditviewFragment.class, MainNavigationControllerActivity.createArguments(MediaEditviewFragment.ARG_MEDIA_ID, entity.getId()), true);
+                    Bundle args = MainNavigationControllerActivity.createArguments(MediaEditviewFragment.ARG_MEDIA_ID, entity.getId());
+                    args.putSerializable(MediaEditviewFragment.ARG_MODE,MediaEditviewFragment.Mode.READ);
+                    ((MainNavigationControllerActivity) getActivity()).showView(MediaEditviewFragment.class, args, true);
                 }
 
                 @Override

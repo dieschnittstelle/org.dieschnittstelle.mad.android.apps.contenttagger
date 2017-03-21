@@ -3,7 +3,9 @@ package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
+import android.databinding.BindingConversion;
 import android.graphics.Bitmap;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -18,8 +20,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.databinding.MediaEditviewBinding;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media;
 import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
+import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
@@ -32,9 +36,12 @@ import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
  *
  * TODO: allow to edit images in Photo-App onclick of the ImageView
  */
-public class MediaEditviewFragment extends Fragment implements EventGenerator, EventListenerOwner {
+public class MediaEditviewFragment extends Fragment implements EventGenerator, EventListenerOwner, MainNavigationControllerActivity.OnBackListener {
 
     protected static String logger = "MediaEditviewFragment";
+
+    // TODO: provide some generic component for supporting mode (at least defining enum and argument constants)
+    public static enum Mode {READ, EDIT};
 
     /*
      * we expect that the id of the item to be displayed is passed to us, rather than the item itself...
@@ -50,19 +57,28 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
 
     public static final String ARG_CALLED_FROM_SEND = "calledFromSend";
 
+    public static final String ARG_MODE = "mode";
+
     /*
      * the ui elements
      */
     protected EditText title;
     protected EditText description;
+    protected MediaEditviewBinding binding;
     protected ImageView mediaContent;
     protected TagsbarController tagsbarController;
     protected View contentView;
 
     /*
-     * the model object that we use
+     * the model object that we use and its savepoint that represent the state when entering this view
      */
     protected Media media;
+    public Media savepoint;
+
+    /*
+     * the mode of the view (edit mode is default)
+     */
+    protected Mode mode = Mode.EDIT;
 
     /*
      * whether we are called from handling a send actions
@@ -79,6 +95,9 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
         super.onCreate(savedInstanceState);
 
         calledFromSend = getArguments().getBoolean(ARG_CALLED_FROM_SEND);
+        if (getArguments().containsKey(ARG_MODE)) {
+            this.mode = (Mode)getArguments().getSerializable(ARG_MODE);
+        }
 
         addEventListeners();
 
@@ -113,10 +132,14 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
             public void onEvent(Event<Media> event) {
                 media = event.getData();
                 ((ActionBarActivity) getActivity()).setTitle(media.getTitle());
-                title.setText(media.getTitle());
-                description.setText(media.getDescription());
+                binding.setMedia(media);
+                savepoint = (Media)media.shallowClone();
+//                title.setText(media.getTitle());
+//                description.setText(media.getDescription());
 
-                MediaPagerFragment.loadMediaIntoImageView(getActivity(),media,contentView,mediaContent,MediaPagerFragment.FLAG_LOAD_THUMBNAIL | MediaPagerFragment.FLAG_LOAD_IMAGE);
+                if (media.getContentUri() != null) {
+                    MediaPagerFragment.loadMediaIntoImageView(getActivity(), media, contentView, mediaContent, MediaPagerFragment.FLAG_LOAD_THUMBNAIL | MediaPagerFragment.FLAG_LOAD_IMAGE);
+                }
 
                 tagsbarController.bindTaggable(media);
             }
@@ -146,6 +169,7 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
                 Log.d(logger,"onResume(): no mediaId has been passed. Create new media element.");
                 ((ActionBarActivity) getActivity()).setTitle(R.string.title_create_media);
                 media = new Media();
+                binding.setMedia(media);
                 // check whether we have been passed a url
                 if (getArguments().containsKey(ARG_MEDIA_CONTENT_URI)) {
                     Log.d(logger, "onResume(): mediaContentUri has been sent. Set it...");
@@ -171,10 +195,14 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-        this.contentView = inflater.inflate(R.layout.media_editview,container,false);
 
-        this.title = (EditText)contentView.findViewById(R.id.title);
-        this.description = (EditText)contentView.findViewById(R.id.description);
+        this.binding = MediaEditviewBinding.inflate(inflater);
+        this.contentView = binding.getRoot();//inflater.inflate(R.layout.media_editview,container,false);
+
+        this.binding.setMode(this.mode);
+
+//        this.title = (EditText)contentView.findViewById(R.id.title);
+//        this.description = (EditText)contentView.findViewById(R.id.description);
         this.mediaContent = (ImageView)contentView.findViewById(R.id.mediaContent);
         this.tagsbarController = new TagsbarController(this,(ViewGroup)contentView.findViewById(R.id.tagsbar),R.layout.tagsbar_itemview);
 
@@ -192,17 +220,26 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.menu_media_editview,menu);
+        if (this.mode == Mode.READ) {
+            inflater.inflate(R.menu.menu_media_editview_read,menu);
+        }
+        else {
+            inflater.inflate(R.menu.menu_media_editview,menu);
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // we check the known options
         switch (item.getItemId()) {
+            // this action triggers switching of the mode
+            case R.id.action_edit:
+                switchMode(Mode.EDIT);
+                return true;
             case R.id.action_save:
                 // bind the data from the input form to the item
-                media.setTitle(this.title.getText().toString());
-                media.setDescription(this.description.getText().toString());
+//                media.setTitle(this.title.getText().toString());
+//                media.setDescription(this.description.getText().toString());
                 if (media.created()) {
                     media.update();
                 }
@@ -252,5 +289,41 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
         intent.setDataAndType(photoUri, "image/*");
         startActivity(intent);
     }
+
+    // this is required for assiging color using data binding
+    @BindingConversion
+    public static ColorDrawable convertColorToDrawable(int color) {
+        return new ColorDrawable(color);
+    }
+
+    // mode handling, including switching back
+    private boolean modeSwitched;
+
+    private void switchMode(Mode mode) {
+        this.mode = mode;
+        this.binding.setMode(this.mode);
+        this.modeSwitched = true;
+        getActivity().invalidateOptionsMenu();
+    }
+
+    @Override
+    public boolean onBackPressed() {
+       if (this.mode == Mode.EDIT) {
+           // if back is pressed we will undo any potential edits
+           if (savepoint != null) {
+               media.restoreFrom(savepoint);
+               binding.setMedia(media);
+           }
+
+           if (modeSwitched) {
+               switchMode(Mode.READ);
+               return true;
+           }
+       }
+
+       return false;
+    }
+
+
 
 }

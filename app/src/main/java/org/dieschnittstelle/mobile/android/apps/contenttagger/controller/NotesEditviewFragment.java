@@ -2,12 +2,9 @@ package org.dieschnittstelle.mobile.android.apps.contenttagger.controller;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,25 +17,27 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import org.dieschnittstelle.mobile.android.apps.contenttagger.R;
+import org.dieschnittstelle.mobile.android.apps.contenttagger.databinding.NotesEditviewBinding;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note;
-import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Tag;
 import org.dieschnittstelle.mobile.android.apps.contenttagger.model.Taggable;
 import org.dieschnittstelle.mobile.android.components.controller.CustomDialogController;
 import org.dieschnittstelle.mobile.android.components.controller.LifecycleHandling;
+import org.dieschnittstelle.mobile.android.components.controller.MainNavigationControllerActivity;
 import org.dieschnittstelle.mobile.android.components.events.Event;
 import org.dieschnittstelle.mobile.android.components.events.EventDispatcher;
 import org.dieschnittstelle.mobile.android.components.events.EventGenerator;
 import org.dieschnittstelle.mobile.android.components.events.EventListener;
 import org.dieschnittstelle.mobile.android.components.events.EventListenerOwner;
 import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
-import org.dieschnittstelle.mobile.android.components.model.Entity;
 
 /**
  * Created by master on 17.03.16.
  *
  * use slidinguppanel: https://www.numetriclabz.com/implementation-of-sliding-up-panel-using-androidslidinguppanel-in-android-tutorial
  */
-public class NotesEditviewFragment extends Fragment implements EventGenerator, EventListenerOwner {
+public class NotesEditviewFragment extends Fragment implements EventGenerator, EventListenerOwner, MainNavigationControllerActivity.OnBackListener {
+
+    public static enum Mode {READ, EDIT};
 
     protected static String logger = "NotesEditviewFragment";
 
@@ -55,10 +54,13 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
     protected TagsbarController tagsbarController;
     protected AttachmentsPanelController attachmentsController;
 
+    protected NotesEditviewBinding binding;
+
     /*
-     * the model object that we use
+     * the model object that we use and a savepoint
      */
     protected Note note;
+    protected Note savepoint;
 
     /*
      * we need to handle obsoletion of readview (which is a subclass) here...
@@ -99,8 +101,10 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
             @Override
             public void onEvent(Event<Note> event) {
                 note = event.getData();
+                savepoint = (Note)note.shallowClone();
                 Log.i(logger,"onEvent(): read(): " + note);
                 ((ActionBarActivity) getActivity()).setTitle(note.getTitle());
+//                binding.setNote(note);
                 title.setText(note.getTitle());
                 content.setText(note.getContent());
                 tagsbarController.bindTaggable(note);
@@ -122,13 +126,14 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
             // we read out the id from the arguments
             long noteId = getArguments().getLong(ARG_NOTE_ID);
             if (noteId > -1) {
-//                ((ActionBarActivity) getActivity()).setTitle(R.string.title_edit_note);
+                ((ActionBarActivity) getActivity()).setTitle(R.string.title_edit_note);
                 // read all notes - reaction will be dealt with by event handler
                 Note.read(Note.class, noteId, this);
             } else if (note == null) {
                 ((ActionBarActivity) getActivity()).setTitle(R.string.title_create_note);
                 note = new Note();
                 // this is required in order for the tagbar to be available for new notes
+//                binding.setNote(note);
                 tagsbarController.bindTaggable(note);
                 attachmentsController.bindTaggable(note);
             }
@@ -180,7 +185,11 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-        View contentView = inflater.inflate(R.layout.notes_editview,container,false);
+
+        // here, we couod use the data binding framework - currently this is not used, though, due to some layout creation error from the slide up panel
+//        this.binding = NotesEditviewBinding.inflate(inflater);
+
+        View contentView = inflater.inflate(R.layout.notes_editview,container,false);//(ViewDataBinding)this.binding).getRoot();
 
         this.title = (EditText)contentView.findViewById(R.id.title);
         this.content = (EditText)contentView.findViewById(R.id.content);
@@ -352,4 +361,15 @@ public class NotesEditviewFragment extends Fragment implements EventGenerator, E
 
         super.onActivityResult(requestCode, resultCode, data);
     }
+
+    @Override
+    public boolean onBackPressed() {
+        if (savepoint != null) {
+            // we pretend to be saved in order for automatic saving not to apply
+            saved = true;
+            note.restoreFrom(savepoint);
+        }
+        return false;
+    }
+
 }

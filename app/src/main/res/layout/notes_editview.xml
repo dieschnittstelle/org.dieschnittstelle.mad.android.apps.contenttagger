@@ -1,62 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.sothree.slidinguppanel.SlidingUpPanelLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:sothree="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/sliding_layout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="bottom"
-    sothree:umanoPanelHeight="90dp"
-    sothree:umanoShadowHeight="4dp">
+<!-- so far, data binding is not used here, because there seems to be conflict with the slidinguppanel that results in some height attribute not being set -->
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:sothree="http://schemas.android.com/apk/res-auto">
 
-    <RelativeLayout
+    <data>
+        <import type="org.dieschnittstelle.mobile.android.apps.contenttagger.controller.NotesEditviewFragment.Mode"/>
+        <variable
+            name="note"
+            type="org.dieschnittstelle.mobile.android.apps.contenttagger.model.Note" />
+        <variable
+            name="mode"
+            type="org.dieschnittstelle.mobile.android.apps.contenttagger.controller.NotesEditviewFragment.Mode" />
+    </data>
+
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        android:id="@+id/sliding_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background_material_dark"
-        android:padding="10dp">
+        android:gravity="bottom"
+        sothree:umanoPanelHeight="90dp"
+        sothree:umanoShadowHeight="4dp">
 
-        <EditText
-            android:id="@+id/title"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_alignParentTop="true"
-            android:background="@drawable/edittext_border_darkbackground"
-            android:focusable="true"
-            android:hint="@string/hint_notes_editview_title"
-            android:textColorHint="@color/edittext_hint"
-            android:textCursorDrawable="@drawable/edittext_cursor_darkbackground" />
+            android:layout_height="match_parent"
+            android:background="@color/background_material_dark"
+            android:padding="10dp">
 
-        <Space
-            android:id="@+id/space"
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            android:layout_below="@id/title" />
-
-        <ScrollView
-            android:id="@+id/ScrollView01"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_below="@id/space"
-            android:background="@drawable/input_rectangle_border">
-
-            <!-- background hides the bar underneath -->
             <EditText
-                android:id="@+id/content"
+                android:id="@+id/title"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:hint="@string/blind_large_1"
-                android:maxLength="99999999"
-                android:padding="5dp"
+                android:layout_height="40dp"
+                android:layout_alignParentTop="true"
+                android:background="@drawable/edittext_border_darkbackground"
+                android:focusable="true"
+                android:hint="@string/hint_notes_editview_title"
                 android:textColorHint="@color/edittext_hint"
-                android:textCursorDrawable="@drawable/edittext_cursor_darkbackground"
-                android:textSize="13dp" />
+                android:text="@{note.title}"
+                android:enabled="@{mode == Mode.EDIT}"
+                android:textCursorDrawable="@drawable/edittext_cursor_darkbackground" />
 
-        </ScrollView>
+            <Space
+                android:id="@+id/space"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:layout_below="@id/title" />
 
-        <include layout="@layout/tagsbar" />
+            <ScrollView
+                android:id="@+id/ScrollView01"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:layout_below="@id/space"
+                android:background="@drawable/input_rectangle_border">
 
-    </RelativeLayout>
+                <!-- background hides the bar underneath -->
+                <EditText
+                    android:id="@+id/content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="@string/blind_large_1"
+                    android:maxLength="99999999"
+                    android:padding="5dp"
+                    android:text="@{note.content}"
+                    android:enabled="@{mode == Mode.EDIT}"
+                    android:textColorHint="@color/edittext_hint"
+                    android:textCursorDrawable="@drawable/edittext_cursor_darkbackground"
+                    android:textSize="13dp" />
 
-    <include layout="@layout/taggable_attachments_panel"/>
+            </ScrollView>
 
-</com.sothree.slidinguppanel.SlidingUpPanelLayout>
+            <include layout="@layout/tagsbar" />
+
+        </RelativeLayout>
+
+        <include layout="@layout/taggable_attachments_panel" />
+
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
+</layout>
