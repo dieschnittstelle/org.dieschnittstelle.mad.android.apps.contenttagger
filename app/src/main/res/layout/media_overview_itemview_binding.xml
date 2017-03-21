@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--                         android:text="@{((entity.title == null || entity.title.trim().length() == 0) &amp;&amp; entity.attachers.size() > 0) ? entity.attachers.get(0).getTitle() : entity.title}" -->
+    <data>
+        <import type="android.view.View"/>
+        <import type="android.graphics.Typeface"/>
+        <variable
+            name="entity"
+            type="org.dieschnittstelle.mobile.android.apps.contenttagger.model.Media"/>
+        <variable
+            name="position"
+            type="java.lang.Integer"/>
+        <variable
+            name="viewcontroller"
+            type="org.dieschnittstelle.mobile.android.apps.contenttagger.controller.MediaOverviewFragment"/>
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical" android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:background="@drawable/inputselector">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp">
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:id="@+id/mediaContent"
+                    android:layout_width="50dp"
+                    android:scaleType="centerCrop"
+                    android:onClick="@{() -> viewcontroller.showImagePager(position)}"
+                    android:layout_height="50dp" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:paddingLeft="10dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:textSize="@dimen/abc_text_size_medium_material"
+                        android:textColor="@color/abc_primary_text_material_dark"
+                        android:id="@+id/title"
+                        android:text="@{(entity.attachers.size() > 0) ? entity.attachers.get(0).getTitle() : entity.title}"
+                        android:typeface='@{(entity.attachers.size() > 0) ? Typeface.ITALIC : Typeface.NORMAL}'
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        />
+                    <TextView
+                        android:textSize="@dimen/abc_text_size_small_material"
+                        android:textColor="@color/abc_primary_text_material_dark"
+                        android:id="@+id/subtitle"
+                        android:text='@{(entity.attachers.size() > 0) ? "" : String.valueOf(entity.created)}'
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        />
+                </LinearLayout>
+            </LinearLayout>
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:orientation="vertical">
+                <ImageButton
+                    android:id="@+id/listitem_menu"
+                    android:background="@drawable/inputselector"
+                    android:src="@drawable/abc_ic_menu_moreoverflow_mtrl_alpha"
+                    android:layout_width="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_centerHorizontal="true"
+                    android:layout_height="wrap_content" />
+                <Space
+                    android:layout_below="@id/listitem_menu"
+                    android:id="@+id/space"
+                    android:layout_width="1dp"
+                    android:layout_height="5dp" />
+                <TextView
+                    android:paddingRight="5dp"
+                    android:paddingLeft="5dp"
+                    android:maxLength="3"
+                    android:textColor="@color/abc_primary_text_material_dark"
+                    android:id="@+id/numOfTags"
+                    android:visibility="@{entity.tags.size() == 0 ? View.GONE : View.VISIBLE}"
+                    android:text='@{String.valueOf(entity.tags.size())}'
+                    android:layout_width="wrap_content"
+                    android:layout_below="@id/space"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_alignParentBottom="true"
+                    android:background="@drawable/circle_primary_filled"
+                    />
+            </RelativeLayout>
+        </RelativeLayout>
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/button_material_dark" />
+    </LinearLayout>
+</layout>

@@ -6,6 +6,8 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.databinding.DataBindingUtil;
+import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,6 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.dieschnittstelle.mobile.android.components.model.Entity;
+import org.dieschnittstelle.mobile.android.components.view.EntityViewHolderWithBinding;
 
 /**
  * Created by master on 12.03.16.
@@ -34,6 +37,7 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
     protected static String logger = "EntityListAdapter";
 
     private Activity controller;
+    private Fragment viewcontroller;
 
     private List<E> entities = new ArrayList<E>();
     //private SortedList<?> entities = new SortedList(null,null);
@@ -44,6 +48,12 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
     // a list of sorting strategies
     private List<List<Comparator<? super E>>> sortingStrategies = new ArrayList<List<Comparator<? super E>>>();
 
+    // the ids of variables that will be set for each list item if data binding is used
+    private int brEntityId = -1;
+    private int brPositionId = -1;
+    private int brAdapterId = -1;
+    private int brViewcontrollerId = -1;
+
     // we keep the state indicating which sorting strategy we are currently using
     private int currentSortingStrategy = -1;
 
@@ -51,11 +61,45 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
     public View.OnTouchListener onTouchItemMenuListener = new SimpleOnTouchListener(new SimpleOnSelectListItemMenuListener(this));
     public View.OnTouchListener onTouchItemMenuActionListener = new SimpleOnTouchListener(new SimpleOnSelectListItemMenuActionListener(this));
 
-    public EntityListAdapter(Activity controller, int itemLayout, int itemMenuLayout, int[] itemMenuMenuActions) {
+    public EntityListAdapter(Object controller, int itemLayout, int itemMenuLayout, int[] itemMenuMenuActions) {
         this.itemLayout = itemLayout;
-        this.controller = controller;
+        if (controller instanceof Fragment) {
+            this.viewcontroller = (Fragment)controller;
+            this.controller = this.viewcontroller.getActivity();
+        }
+        else {
+            this.controller = (Activity)controller;
+        }
         this.itemMenuLayout = itemMenuLayout;
         this.itemMenuActions = itemMenuMenuActions;
+        try {
+            this.brEntityId = (int)Class.forName(this.controller.getApplication().getClass().getPackage().getName() + ".BR").getDeclaredField("entity").get(null);
+            Log.i(logger,"<constructor>: determined id of entity variable used for data binding: " + brEntityId);
+        }
+        catch (Exception e) {
+            Log.w(logger,"<constructor>: got exception trying to access entity variable id. This is ok if data binding is not used. Exception is: " + e,e);
+        }
+        try {
+            this.brPositionId = (int)Class.forName(this.controller.getApplication().getClass().getPackage().getName() + ".BR").getDeclaredField("position").get(null);
+            Log.i(logger,"<constructor>: determined id of position variable used for data binding: " + brPositionId);
+        }
+        catch (Exception e) {
+            Log.w(logger,"<constructor>: got exception trying to access position variable id. This is ok if data binding is not used or if position is not taken into consideration. Exception is: " + e,e);
+        }
+        try {
+            this.brAdapterId = (int)Class.forName(this.controller.getApplication().getClass().getPackage().getName() + ".BR").getDeclaredField("adapter").get(null);
+            Log.i(logger,"<constructor>: determined id of adapter variable used for data binding: " + brAdapterId);
+        }
+        catch (Exception e) {
+            Log.w(logger,"<constructor>: got exception trying to access adapter variable id. This is ok if data binding is not used or if access to the adapter is not required. Exception is: " + e,e);
+        }
+        try {
+            this.brViewcontrollerId = (int)Class.forName(this.controller.getApplication().getClass().getPackage().getName() + ".BR").getDeclaredField("viewcontroller").get(null);
+            Log.i(logger,"<constructor>: determined id of viewcontroller variable used for data binding: " + brViewcontrollerId);
+        }
+        catch (Exception e) {
+            Log.w(logger,"<constructor>: got exception trying to access viewcontroller variable id. This is ok if data binding is not used or if access to the viewcontroller is not required. Exception is: " + e,e);
+        }
     }
 
     public Activity getController() {
@@ -63,14 +107,14 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
     }
 
     /*
-     * an alternative constructor passing a recycler view for doing default settings
+     * an alternative constructor passing a recycler viewcontroller for doing default settings
      */
-    public EntityListAdapter(Activity controller, RecyclerView recyclerView, int itemLayout, int itemMenuLayout, int[] itemMenuMenuActions) {
+    public EntityListAdapter(Object controller, RecyclerView recyclerView, int itemLayout, int itemMenuLayout, int[] itemMenuMenuActions) {
         this(controller, itemLayout, itemMenuLayout, itemMenuMenuActions);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(controller));
+        recyclerView.setLayoutManager(new LinearLayoutManager(this.controller));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        // set the adapter on the view
+        // set the adapter on the viewcontroller
         recyclerView.setAdapter(this);
     }
 
@@ -80,6 +124,10 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
         View v = LayoutInflater.from(parent.getContext()).inflate(itemLayout, parent, false);
         try {
             EntityViewHolder vh = onCreateEntityViewHolder(v, this);
+            if (vh instanceof EntityViewHolderWithBinding) {
+                ViewDataBinding binding = DataBindingUtil.bind(v);
+                ((EntityViewHolderWithBinding)vh).setBinding(binding);
+            }
             vh.setViewAndAdapter(v,this);
             return vh;
         }
@@ -99,9 +147,22 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
         onBindEntityViewHolder((H)holder,entity,position);
     }
 
-    public abstract H onCreateEntityViewHolder(View view,EntityListAdapter adapter);
+    // by default, we will create a view holder supporting data binding
+    public H onCreateEntityViewHolder(View view,EntityListAdapter adapter) {
+        return (H)new EntityViewHolderWithBinding(view, adapter);
+    }
 
-    public abstract void onBindEntityViewHolder(H holder,E entity,int position);
+    // by default, we will apply data binding
+    public void onBindEntityViewHolder(H holder,E entity,int position) {
+        if (holder instanceof EntityViewHolderWithBinding) {
+            Log.d(logger,"onBindViewHolder(): data binding is used. Setting variables for position: " + position);
+            ((EntityViewHolderWithBinding)holder).getBinding().setVariable(brEntityId,entity);
+            ((EntityViewHolderWithBinding)holder).getBinding().setVariable(brPositionId,position);
+            ((EntityViewHolderWithBinding)holder).getBinding().setVariable(brAdapterId,this);
+            ((EntityViewHolderWithBinding)holder).getBinding().setVariable(brViewcontrollerId,this.viewcontroller != null ? this.viewcontroller : this.controller);
+//            ((EntityViewHolderWithBinding)holder).getBinding().executePendingBindings();
+        }
+    }
 
 
     @Override
@@ -114,7 +175,7 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
     }
 
     /************************************************************
-     * the view holder
+     * the viewcontroller holder
      ************************************************************/
 
     public abstract static class EntityViewHolder extends RecyclerView.ViewHolder {
@@ -411,13 +472,13 @@ public abstract class EntityListAdapter<E extends Entity,H extends EntityListAda
         LayoutInflater inflater = controller.getLayoutInflater();
 
         // Inflate and set the layout for the dialog
-        // Pass null as the parent view because its going in the dialog layout
+        // Pass null as the parent viewcontroller because its going in the dialog layout
         View dialogView = inflater.inflate(itemMenuLayout, null);
-        // we create a view holder
+        // we create a viewcontroller holder
         dialogView.findViewById(getController().getResources().getIdentifier("dialogRoot","id", getController().getApplicationContext().getPackageName())/*R.id.dialogRoot*/).setTag(new ItemMenuDialogViewHolder(dialogView, this));
 
         builder.setView(dialogView);
-        // we set the view as an instance variable as findViewById() does not work on the dialog
+        // we set the viewcontroller as an instance variable as findViewById() does not work on the dialog
         this.itemMenuDialogView = dialogView;
 
         return builder.create();

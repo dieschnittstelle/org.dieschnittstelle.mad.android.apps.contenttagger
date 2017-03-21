@@ -205,6 +205,7 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
 //        this.description = (EditText)contentView.findViewById(R.id.description);
         this.mediaContent = (ImageView)contentView.findViewById(R.id.mediaContent);
         this.tagsbarController = new TagsbarController(this,(ViewGroup)contentView.findViewById(R.id.tagsbar),R.layout.tagsbar_itemview);
+        this.tagsbarController.setRemoveActive(this.mode == Mode.EDIT);
 
         // set a listener on the media content element
         this.mediaContent.setOnClickListener(new View.OnClickListener() {
@@ -303,12 +304,16 @@ public class MediaEditviewFragment extends Fragment implements EventGenerator, E
         this.mode = mode;
         this.binding.setMode(this.mode);
         this.modeSwitched = true;
+        tagsbarController.setRemoveActive(mode == Mode.EDIT);
+        tagsbarController.bindTaggable(this.media);
+
         getActivity().invalidateOptionsMenu();
     }
 
     @Override
     public boolean onBackPressed() {
        if (this.mode == Mode.EDIT) {
+
            // if back is pressed we will undo any potential edits
            if (savepoint != null) {
                media.restoreFrom(savepoint);

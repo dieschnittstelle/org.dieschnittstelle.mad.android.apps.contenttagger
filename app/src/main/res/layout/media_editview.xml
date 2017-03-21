@@ -29,7 +29,8 @@
             android:focusable="true"
             android:hint="@string/hint_links_editview_title"
             android:text="@={media.title}"
-            android:textColor="@{mode == Mode.EDIT ? @color/abc_primary_text_material_dark : @color/abc_primary_text_material_dark}"            android:enabled="@{mode == Mode.EDIT}"
+            android:textColor="@{mode == Mode.EDIT ? @color/abc_primary_text_material_dark : @color/abc_primary_text_material_dark}"
+            android:enabled="@{mode == Mode.EDIT}"
             android:textColorHint="@color/edittext_hint"
             android:textCursorDrawable="@drawable/edittext_cursor_darkbackground" />
 
