@@ -28,8 +28,10 @@ import org.dieschnittstelle.mobile.android.components.events.EventMatcher;
 import org.dieschnittstelle.mobile.android.components.model.Entity;
 import org.dieschnittstelle.mobile.android.components.view.ListItemViewHolderTitleSubtitle;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -117,7 +119,11 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
                 public void onBindEntityViewHolder(NotesListItemViewHolder holder, Note entity, int position) {
                     Log.d(logger,"onBindEntityViewHolder(): id is: " + entity.getId());
                     holder.title.setText(entity.getTitle());
-                    holder.subtitle.setText(String.valueOf(entity.getLastmodified()));
+
+                    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+                    Date date = new Date(/*entity.getCreated() > 0 ? entity.getCreated() : */entity.getLastmodified());
+
+                    holder.subtitle.setText(String.valueOf(df.format(date)));
                     int numOfTags = entity.getTags() != null ? entity.getTags().size() : 0;
                     if (numOfTags == 0) {
                         holder.numOfTags.setVisibility(View.GONE);
@@ -169,13 +175,13 @@ public class NotesOverviewFragment extends Fragment implements EventGenerator, E
         List<Comparator<? super Note>> c1 = new ArrayList<Comparator<? super Note>>();
         c1.add(Note.COMPARE_BY_TITLE);
         List<Comparator<? super Note>> c2 = new ArrayList<Comparator<? super Note>>();
-        c2.add(Note.COMPARE_BY_TITLE);
+//        c2.add(Note.COMPARE_BY_TITLE);
         c2.add(Note.COMPARE_BY_DATE);
         List<Comparator<? super Note>> c3 = new ArrayList<Comparator<? super Note>>();
         c3.add(Note.COMPARE_BY_TITLE);
         c3.add(Note.COMPARE_BY_NUM_OF_TAGS);
-        adapter.addSortingStrategy(c1);
         adapter.addSortingStrategy(c2);
+        adapter.addSortingStrategy(c1);
         adapter.addSortingStrategy(c3);
     }
 

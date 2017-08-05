@@ -21,9 +21,9 @@ public class Note extends Taggable implements Serializable {
     public static Comparator<Note> COMPARE_BY_DATE = new Comparator<Note>() {
         @Override
         public int compare(Note lhs, Note rhs) {
-                Long lhsdate = lhs.created > 0 ? lhs.created : lhs.lastmodified;
-                Long rhsdate = rhs.created > 0 ? rhs.created : rhs.lastmodified;
-                return lhsdate.compareTo(rhsdate);
+                Long lhsdate = /*lhs.created > 0 ? lhs.created : */lhs.lastmodified;
+                Long rhsdate = /*rhs.created > 0 ? rhs.created : */rhs.lastmodified;
+                return rhsdate.compareTo(lhsdate);
         }
     };
 

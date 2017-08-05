@@ -46,6 +46,7 @@
     <string name="action_open">Open</string>
     <string name="action_share">Share</string>
     <string name="action_export_data">Export</string>
+    <string name="action_import_data">Import</string>
     <string name="title_create_media">New Media</string>
     <string name="action_sort">Sort</string>
     <string name="title_delete_taggable" >Delete Item</string>

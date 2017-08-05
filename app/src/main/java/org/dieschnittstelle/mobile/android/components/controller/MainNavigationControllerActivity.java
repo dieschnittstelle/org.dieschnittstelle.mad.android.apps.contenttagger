@@ -33,6 +33,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -199,6 +201,44 @@ public class MainNavigationControllerActivity extends ActionBarActivity implemen
         }
         else {
             Log.d(logger, "not export action provided.");
+        }
+
+        View importAction = findViewById(getResources().getIdentifier("action_import_data","id",appPackage));
+        if (importAction != null) {
+            Log.d(logger,"main view provides import action: " + importAction);
+            importAction.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        // try to read out the metadata for the database - assuming we use sugar orm
+                        ApplicationInfo ai = getPackageManager().getApplicationInfo(appPackage, PackageManager.GET_META_DATA);
+                        Bundle metaData = ai.metaData;
+                        if (metaData == null) {
+                            Log.i(logger, "no metadata specified in manifest for application. Cannot reset database...");
+                        } else {
+                            String databaseName = metaData.getString("DATABASE");
+                            File dbfile = getDatabasePath(databaseName);
+                            Log.i(logger,"about to import database: " + dbfile);
+
+                            try {
+                                String assetName = "IMPORT_" + databaseName + ".txt";
+                                Log.i(logger,"asset to be imported: " + assetName);
+                                InputStream assetSrc = getAssets().open("IMPORT_" + databaseName + ".txt");//.createInputStream();
+                                importAsset(assetSrc,getDatabasePath(databaseName));
+                                Toast.makeText(MainNavigationControllerActivity.this,"Database file has been successfully imported",Toast.LENGTH_LONG).show();
+                            } catch (IOException e) {
+                                Toast.makeText(MainNavigationControllerActivity.this,"Could not import database file! Got exception: " + e,Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    }
+                    catch (Exception e) {
+                        Log.e(logger,"got exception trying to access application metadata: " + e,e);
+                    }
+                }
+            });
+        }
+        else {
+            Log.d(logger, "no import action provided.");
         }
 
 
@@ -420,5 +460,41 @@ public class MainNavigationControllerActivity extends ActionBarActivity implemen
         return expFile;
     }
 
+    public File importAsset(InputStream in, File dst) throws IOException {
+
+        Log.i(logger,"importing database " + in + " to file: " + dst);
+        OutputStream out = null;
+
+        try {
+            out = new FileOutputStream(dst);
+            copyFile(in, out);
+            in.close();
+            in = null;
+            out.flush();
+            out.close();
+            out = null;
+        } catch(IOException e) {
+            Log.e("tag", "Failed to copy asset: " + e, e);
+        } finally {
+            if (in != null) {
+                in.close();
+                in = null;
+            }
+            if (out != null) {
+                out.close();
+                out = null;
+            }
+        }
+
+        return dst;
+    }
+
+    private void copyFile(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[1024];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            out.write(buffer, 0, read);
+        }
+    }
 
 }

@@ -92,6 +92,28 @@
                     android:text="@string/action_export_data">
                 </TextView>
             </LinearLayout>
+            <!-- deactivate import as impl currently does not reconfirm action which might cause data loss -->
+            <!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:orientation="horizontal"-->
+                <!--android:padding="15dp"-->
+                <!--android:id="@+id/action_import_data"-->
+                <!--android:background="@drawable/inputselector"-->
+                <!--&gt;-->
+                <!--<ImageView-->
+                    <!--android:src="@drawable/ic_import_export_white_24dp"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="match_parent"/>-->
+                <!--<TextView xmlns:android="http://schemas.android.com/apk/res/android"-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:textSize="@dimen/abc_text_size_large_material"-->
+                    <!--android:paddingLeft="15dp"-->
+                    <!--android:textColor="@color/abc_primary_text_material_dark"-->
+                    <!--android:text="@string/action_import_data">-->
+                <!--</TextView>-->
+            <!--</LinearLayout>-->
         </LinearLayout>
 
     </android.support.v4.widget.DrawerLayout>
